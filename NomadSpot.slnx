@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="NomadSpot.Blazor/NomadSpot.Blazor.csproj" />
+  <Project Path="NomadSpot.Model/NomadSpot.Model.csproj" />
+  <Project Path="NomadSpot.ViewModel/NomadSpot.ViewModel.csproj" />
+  <Project Path="NomadSpot.WPF/NomadSpot.WPF.csproj" />
+</Solution>
