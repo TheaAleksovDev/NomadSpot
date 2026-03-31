@@ -1,6 +1,7 @@
-﻿using NomadSpot.Model.Entities;
+﻿using Dapper;
+using Microsoft.Data.Sqlite;
+using NomadSpot.Model.Entities;
 using NomadSpot.Model.Repositories;
-using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -17,32 +18,52 @@ namespace NomadSpot.Model.Database
 
         public IEnumerable<Location> GetAll()
         {
-            throw new NotImplementedException();
-        }
-
-        public IEnumerable<Location> GetByFilter(Dictionary<string, object> filters)
-        {
-            throw new NotImplementedException();
+            using var conn = new SqliteConnection(_connectionString);
+            return conn.Query<Location>("SELECT * FROM Locations WHERE IsActive = 1");
         }
 
         public Location GetById(int id)
         {
-            throw new NotImplementedException();
+            using var conn = new SqliteConnection(_connectionString);
+            return conn.QueryFirstOrDefault<Location>(
+                "SELECT * FROM Locations WHERE Id = @Id", new { Id = id });
+        }
+
+        public IEnumerable<Location> GetByFilter(Dictionary<string, object> filters)
+        {
+            using var conn = new SqliteConnection(_connectionString);
+            var sql = new StringBuilder("SELECT * FROM Locations WHERE IsActive = 1");
+            foreach (var filter in filters)
+                sql.Append($" AND {filter.Key} = @{filter.Key}");
+            return conn.Query<Location>(sql.ToString(), filters);
         }
 
         public void Add(Location location)
         {
-            throw new NotImplementedException();
+            using var conn = new SqliteConnection(_connectionString);
+            conn.Execute(@"
+                INSERT INTO Locations 
+                (Name, Address, Latitude, Longitude, Rating, NoiseLevel, HasWifi, HasPowerOutlets, LastVerified, IsActive, LocationType)
+                VALUES 
+                (@Name, @Address, @Latitude, @Longitude, @Rating, @NoiseLevel, @HasWifi, @HasPowerOutlets, @LastVerified, @IsActive, @LocationType)",
+                location);
         }
 
         public void Update(Location location)
         {
-            throw new NotImplementedException();
+            using var conn = new SqliteConnection(_connectionString);
+            conn.Execute(@"
+                UPDATE Locations SET 
+                Name = @Name, Address = @Address, Rating = @Rating,
+                NoiseLevel = @NoiseLevel, HasWifi = @HasWifi,
+                HasPowerOutlets = @HasPowerOutlets, LastVerified = @LastVerified
+                WHERE Id = @Id", location);
         }
 
         public void SetInactive(int id)
         {
-            throw new NotImplementedException();
+            using var conn = new SqliteConnection(_connectionString);
+            conn.Execute("UPDATE Locations SET IsActive = 0 WHERE Id = @Id", new { Id = id });
         }
     }
 }

@@ -1,8 +1,8 @@
-﻿using NomadSpot.Model.Entities;
+﻿using Dapper;
+using NomadSpot.Model.Entities;
 using NomadSpot.Model.Repositories;
-using System;
+using Npgsql;
 using System.Collections.Generic;
-using System.Text;
 
 namespace NomadSpot.Model.Database
 {
@@ -17,12 +17,19 @@ namespace NomadSpot.Model.Database
 
         public IEnumerable<Review> GetByLocationId(int locationId)
         {
-            throw new NotImplementedException();
+            using var conn = new NpgsqlConnection(_connectionString);
+            return conn.Query<Review>(
+                "SELECT * FROM Reviews WHERE LocationId = @LocationId",
+                new { LocationId = locationId });
         }
 
         public void Add(Review review)
         {
-            throw new NotImplementedException();
+            using var conn = new NpgsqlConnection(_connectionString);
+            conn.Execute(@"
+                INSERT INTO Reviews (LocationId, Author, Comment, Rating, Date)
+                VALUES (@LocationId, @Author, @Comment, @Rating, @Date)",
+                review);
         }
     }
 }
