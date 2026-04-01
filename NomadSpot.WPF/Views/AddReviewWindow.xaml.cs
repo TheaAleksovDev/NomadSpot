@@ -1,26 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using NomadSpot.ViewModel;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace NomadSpot.WPF.Views
 {
-    /// <summary>
-    /// Interaction logic for AddReviewWindow.xaml
-    /// </summary>
-    public partial class AddReviewWindow : Page
+    public partial class AddReviewWindow : Window
     {
-        public AddReviewWindow()
+        private readonly LocationViewModel _viewModel;
+
+        public AddReviewWindow(LocationViewModel viewModel)
         {
             InitializeComponent();
+            _viewModel = viewModel;
+            DataContext = _viewModel;
         }
     }
 }

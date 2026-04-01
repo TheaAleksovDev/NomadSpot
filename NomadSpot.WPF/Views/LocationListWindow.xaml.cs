@@ -1,5 +1,8 @@
-﻿using NomadSpot.ViewModel;
+﻿using NomadSpot.Model.Entities;
+using NomadSpot.ViewModel;
+using System.Collections.Generic;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace NomadSpot.WPF.Views
 {
@@ -12,6 +15,57 @@ namespace NomadSpot.WPF.Views
             InitializeComponent();
             _viewModel = viewModel;
             DataContext = _viewModel;
+            UpdateColumns();
+            LocationsGrid.ItemsSource = _viewModel.LocationList.Items;
+        }
+
+        private void Column_Changed(object sender, RoutedEventArgs e)
+        {
+            UpdateColumns();
+        }
+
+        private void UpdateColumns()
+        {
+            if (LocationsGrid == null) return;
+            LocationsGrid.Columns.Clear();
+
+            if (ColName.IsChecked == true)
+                LocationsGrid.Columns.Add(new DataGridTextColumn { Header = "Name", Binding = new System.Windows.Data.Binding("Name") });
+            if (ColAddress.IsChecked == true)
+                LocationsGrid.Columns.Add(new DataGridTextColumn { Header = "Address", Binding = new System.Windows.Data.Binding("Address") });
+            if (ColRating.IsChecked == true)
+                LocationsGrid.Columns.Add(new DataGridTextColumn { Header = "Rating", Binding = new System.Windows.Data.Binding("Rating") });
+            if (ColNoise.IsChecked == true)
+                LocationsGrid.Columns.Add(new DataGridTextColumn { Header = "Noise Level", Binding = new System.Windows.Data.Binding("NoiseLevel") });
+            if (ColWifi.IsChecked == true)
+                LocationsGrid.Columns.Add(new DataGridTextColumn { Header = "WiFi", Binding = new System.Windows.Data.Binding("HasWifi") });
+        }
+
+        private void LocationsGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (LocationsGrid.SelectedItem is Location selected)
+                _viewModel.LocationList.SelectedItem = selected;
+        }
+
+        private void AddReview_Click(object sender, RoutedEventArgs e)
+        {
+            if (_viewModel.LocationList.SelectedItem == null)
+            {
+                MessageBox.Show("Please select a location first.");
+                return;
+            }
+            var window = new AddReviewWindow(_viewModel);
+            window.Show();
+        }
+
+        private void MarkInactive_Click(object sender, RoutedEventArgs e)
+        {
+            if (_viewModel.LocationList.SelectedItem == null)
+            {
+                MessageBox.Show("Please select a location first.");
+                return;
+            }
+            MessageBox.Show($"Location '{_viewModel.LocationList.SelectedItem.Name}' marked as inactive.");
         }
     }
 }

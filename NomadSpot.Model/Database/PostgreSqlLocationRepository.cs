@@ -20,14 +20,9 @@ namespace NomadSpot.Model.Database
         public IEnumerable<Location> GetAll()
         {
             using var conn = new NpgsqlConnection(_connectionString);
-            return conn.Query<Location>("SELECT * FROM Locations WHERE IsActive = TRUE");
-        }
-
-        public Location GetById(int id)
-        {
-            using var conn = new NpgsqlConnection(_connectionString);
-            return conn.QueryFirstOrDefault<Location>(
-                "SELECT * FROM Locations WHERE Id = @Id", new { Id = id });
+            var indoor = conn.Query<IndoorLocation>("SELECT * FROM Locations WHERE IsActive = TRUE AND LocationType = 'Indoor'").Cast<Location>();
+            var outdoor = conn.Query<OutdoorLocation>("SELECT * FROM Locations WHERE IsActive = TRUE AND LocationType = 'Outdoor'").Cast<Location>();
+            return indoor.Concat(outdoor);
         }
 
         public IEnumerable<Location> GetByFilter(Dictionary<string, object> filters)
@@ -36,7 +31,17 @@ namespace NomadSpot.Model.Database
             var sql = new StringBuilder("SELECT * FROM Locations WHERE IsActive = TRUE");
             foreach (var filter in filters)
                 sql.Append($" AND {filter.Key} = @{filter.Key}");
-            return conn.Query<Location>(sql.ToString(), filters);
+
+            var indoor = conn.Query<IndoorLocation>(sql.ToString() + " AND LocationType = 'Indoor'", filters).Cast<Location>();
+            var outdoor = conn.Query<OutdoorLocation>(sql.ToString() + " AND LocationType = 'Outdoor'", filters).Cast<Location>();
+            return indoor.Concat(outdoor);
+        }
+
+        public Location GetById(int id)
+        {
+            using var conn = new NpgsqlConnection(_connectionString);
+            return conn.QueryFirstOrDefault<Location>(
+                "SELECT * FROM Locations WHERE Id = @Id", new { Id = id });
         }
 
         public void Add(Location location)
