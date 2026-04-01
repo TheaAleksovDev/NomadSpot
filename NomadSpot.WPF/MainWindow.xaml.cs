@@ -40,10 +40,32 @@ namespace NomadSpot.WPF
                 _viewModel.ResultCount = count;
 
             bool indoorOnly = ((ComboBoxItem)LocationTypeBox.SelectedItem).Content.ToString() == "Indoor";
+            _viewModel.IndoorFilter.ClearFilters();
+            _viewModel.OutdoorFilter.ClearFilters();
             _viewModel.FindClosestLocations(indoorOnly);
 
             var window = new Views.LocationListWindow(_viewModel);
             window.Show();
+        }
+
+        private void FilterLocations_Click(object sender, RoutedEventArgs e)
+        {
+            bool indoorOnly = ((ComboBoxItem)LocationTypeBox.SelectedItem).Content.ToString() == "Indoor";
+
+            dynamic filter = indoorOnly ? _viewModel.IndoorFilter : (dynamic)_viewModel.OutdoorFilter;
+
+            Action onSearch = () =>
+            {
+                _viewModel.UserLatitude = double.TryParse(LatitudeBox.Text, out double lat) ? lat : 0;
+                _viewModel.UserLongitude = double.TryParse(LongitudeBox.Text, out double lon) ? lon : 0;
+                _viewModel.FindClosestLocations(indoorOnly);
+
+                var listWindow = new Views.LocationListWindow(_viewModel);
+                listWindow.Show();
+            };
+            var filterWindow = new Views.FilterWindow(filter, onSearch);
+
+            filterWindow.Show();
         }
 
         private void AddLocation_Click(object sender, RoutedEventArgs e)

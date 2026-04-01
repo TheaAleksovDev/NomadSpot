@@ -1,9 +1,46 @@
-﻿<Window x:Class="NomadSpot.WPF.Views.AddLocationWindow"
+<Window x:Class="NomadSpot.WPF.Views.AddLocationWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Add Location" Height="500" Width="600"
+        Title="Add Location" Height="550" Width="450"
         WindowStartupLocation="CenterScreen">
-    <Grid>
+    <ScrollViewer>
+        <StackPanel Margin="15">
+            <TextBlock Text="Add New Location" FontSize="18" FontWeight="Bold" Margin="0,0,0,15"/>
 
-    </Grid>
+            <TextBlock Text="Name:"/>
+            <TextBox x:Name="NameBox" Margin="0,0,0,10"/>
+
+            <TextBlock Text="Address:"/>
+            <TextBox x:Name="AddressBox" Margin="0,0,0,10"/>
+
+            <TextBlock Text="Latitude:"/>
+            <TextBox x:Name="LatBox" Margin="0,0,0,10"/>
+
+            <TextBlock Text="Longitude:"/>
+            <TextBox x:Name="LonBox" Margin="0,0,0,10"/>
+
+            <TextBlock Text="Type:"/>
+            <ComboBox x:Name="TypeBox" Margin="0,0,0,10" SelectionChanged="TypeBox_SelectionChanged">
+                <ComboBoxItem Content="Indoor" IsSelected="True"/>
+                <ComboBoxItem Content="Outdoor"/>
+            </ComboBox>
+
+            <TextBlock Text="Noise Level (1-5):"/>
+            <TextBox x:Name="NoiseBox" Margin="0,0,0,10"/>
+
+            <CheckBox x:Name="WifiBox" Content="Has WiFi" Margin="0,0,0,10"/>
+            <CheckBox x:Name="PowerBox" Content="Has Power Outlets" Margin="0,0,0,15"/>
+
+            <StackPanel x:Name="OutdoorPanel" Visibility="Collapsed">
+                <TextBlock Text="Outdoor Options:" FontWeight="Bold" Margin="0,10,0,5"/>
+                <CheckBox x:Name="BenchesBox" Content="Has Benches" Margin="0,0,0,5"/>
+                <CheckBox x:Name="ShadeBox" Content="Has Shade" Margin="0,0,0,5"/>
+                <CheckBox x:Name="PetBox" Content="Pet Friendly" Margin="0,0,0,5"/>
+                <CheckBox x:Name="ToiletBox" Content="Has Public Toilet" Margin="0,0,0,5"/>
+                <CheckBox x:Name="ShopsBox" Content="Near Shops" Margin="0,0,0,10"/>
+            </StackPanel>
+
+            <Button Content="Add Location" Padding="10,5" Click="Add_Click"/>
+        </StackPanel>
+    </ScrollViewer>
 </Window>

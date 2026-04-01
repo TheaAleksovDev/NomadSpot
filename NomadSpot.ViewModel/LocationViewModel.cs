@@ -44,6 +44,11 @@ namespace NomadSpot.ViewModel
             _reviewRepository = reviewRepository;
         }
 
+        public void AddLocation(Location location)
+        {
+            _locationRepository.Add(location);
+        }
+
         public void FindClosestLocations(bool indoorOnly)
         {
             var filters = indoorOnly

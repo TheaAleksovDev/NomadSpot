@@ -41,6 +41,7 @@
 
         <StackPanel Grid.Row="5" Orientation="Vertical" VerticalAlignment="Bottom">
             <Button Content="Find Closest Locations" Margin="0,5" Padding="10,5" Click="FindLocations_Click"/>
+            <Button Content="Search with Filters" Margin="0,5" Padding="10,5" Click="FilterLocations_Click"/>
             <Button Content="Add New Location" Margin="0,5" Padding="10,5" Click="AddLocation_Click"/>
         </StackPanel>
     </Grid>

@@ -17,6 +17,7 @@ namespace NomadSpot.Model.Entities
         public bool HasPowerOutlets { get; set; }
         public DateTime LastVerified { get; set; }
         public bool IsActive { get; set; }
+        public string LocationType { get; set; }
         public List<Review> Reviews { get; set; } = new();
     }
 }
