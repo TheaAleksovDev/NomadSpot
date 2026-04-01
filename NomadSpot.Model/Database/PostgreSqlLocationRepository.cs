@@ -40,8 +40,15 @@ namespace NomadSpot.Model.Database
         public Location GetById(int id)
         {
             using var conn = new NpgsqlConnection(_connectionString);
-            return conn.QueryFirstOrDefault<Location>(
-                "SELECT * FROM Locations WHERE Id = @Id", new { Id = id });
+            var locationType = conn.QueryFirstOrDefault<string>(
+                "SELECT LocationType FROM Locations WHERE Id = @Id", new { Id = id });
+
+            if (locationType == "Indoor")
+                return conn.QueryFirstOrDefault<IndoorLocation>(
+                    "SELECT * FROM Locations WHERE Id = @Id", new { Id = id });
+            else
+                return conn.QueryFirstOrDefault<OutdoorLocation>(
+                    "SELECT * FROM Locations WHERE Id = @Id", new { Id = id });
         }
 
         public void Add(Location location)

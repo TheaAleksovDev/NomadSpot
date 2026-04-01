@@ -1,9 +1,21 @@
-﻿<Window x:Class="NomadSpot.WPF.Views.AddReviewWindow"
+<Window x:Class="NomadSpot.WPF.Views.AddReviewWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Add Review" Height="400" Width="500"
+        Title="Add Review" Height="350" Width="400"
         WindowStartupLocation="CenterScreen">
-    <Grid>
+    <StackPanel Margin="15">
+        <TextBlock Text="Add Review" FontSize="18" FontWeight="Bold" Margin="0,0,0,15"/>
 
-    </Grid>
+        <TextBlock Text="Author:"/>
+        <TextBox x:Name="AuthorBox" Margin="0,0,0,10"/>
+
+        <TextBlock Text="Rating (1-5):"/>
+        <TextBox x:Name="RatingBox" Margin="0,0,0,10"/>
+
+        <TextBlock Text="Comment:"/>
+        <TextBox x:Name="CommentBox" Height="80" TextWrapping="Wrap"
+                 AcceptsReturn="True" Margin="0,0,0,15"/>
+
+        <Button Content="Add Review" Padding="10,5" Click="Add_Click"/>
+    </StackPanel>
 </Window>

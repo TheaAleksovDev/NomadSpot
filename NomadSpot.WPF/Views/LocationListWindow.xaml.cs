@@ -55,6 +55,12 @@ namespace NomadSpot.WPF.Views
                 return;
             }
             var window = new AddReviewWindow(_viewModel);
+            window.Closed += (s, args) =>
+            {
+                _viewModel.FindClosestLocations(_viewModel.LastSearchWasIndoor);
+                LocationsGrid.ItemsSource = null;
+                LocationsGrid.ItemsSource = _viewModel.LocationList.Items;
+            };
             window.Show();
         }
 

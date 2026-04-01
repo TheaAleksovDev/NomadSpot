@@ -44,13 +44,28 @@ namespace NomadSpot.ViewModel
             _reviewRepository = reviewRepository;
         }
 
+        public void AddReview(Review review)
+        {
+            _reviewRepository.Add(review);
+
+            var reviews = _reviewRepository.GetByLocationId(review.LocationId);
+            double avgRating = reviews.Average(r => r.Rating);
+
+            var location = _locationRepository.GetById(review.LocationId);
+            location.Rating = avgRating;
+            _locationRepository.Update(location);
+        }
+
         public void AddLocation(Location location)
         {
             _locationRepository.Add(location);
         }
 
+        public bool LastSearchWasIndoor { get; private set; }
+
         public void FindClosestLocations(bool indoorOnly)
         {
+            LastSearchWasIndoor = indoorOnly;
             var filters = indoorOnly
                 ? IndoorFilter.GetActiveFilters()
                 : OutdoorFilter.GetActiveFilters();
