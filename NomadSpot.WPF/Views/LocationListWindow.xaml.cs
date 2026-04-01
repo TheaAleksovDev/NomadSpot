@@ -71,7 +71,19 @@ namespace NomadSpot.WPF.Views
                 MessageBox.Show("Please select a location first.");
                 return;
             }
-            MessageBox.Show($"Location '{_viewModel.LocationList.SelectedItem.Name}' marked as inactive.");
+
+            var result = MessageBox.Show(
+                $"Mark '{_viewModel.LocationList.SelectedItem.Name}' as inactive?",
+                "Confirm", MessageBoxButton.YesNo);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                _viewModel.SetInactive(_viewModel.LocationList.SelectedItem.Id);
+                _viewModel.FindClosestLocations(_viewModel.LastSearchWasIndoor);
+                LocationsGrid.ItemsSource = null;
+                LocationsGrid.ItemsSource = _viewModel.LocationList.Items;
+                MessageBox.Show("Location marked as inactive.");
+            }
         }
     }
 }

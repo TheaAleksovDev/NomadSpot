@@ -56,6 +56,11 @@ namespace NomadSpot.ViewModel
             _locationRepository.Update(location);
         }
 
+        public void SetInactive(int id)
+        {
+            _locationRepository.SetInactive(id);
+        }
+
         public void AddLocation(Location location)
         {
             _locationRepository.Add(location);
