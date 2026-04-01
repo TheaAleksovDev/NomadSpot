@@ -1,6 +1,5 @@
 ﻿using NomadSpot.Model.Entities;
 using NomadSpot.Model.Repositories;
-using NomadSpot.ViewModel.NomadSpot.ViewModel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -77,7 +76,8 @@ namespace NomadSpot.ViewModel
 
             var locations = _locationRepository.GetByFilter(filters)
                 .OrderBy(l => CalculateDistance(l.Latitude, l.Longitude))
-                .Take(ResultCount);
+                .Take(ResultCount)
+                .ToList();
 
             LocationList.SetItems(locations);
         }

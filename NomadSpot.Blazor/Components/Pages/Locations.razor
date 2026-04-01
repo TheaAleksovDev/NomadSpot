@@ -1,0 +1,219 @@
+﻿@page "/locations"
+@rendermode InteractiveServer
+@using NomadSpot.ViewModel
+@using NomadSpot.Model.Entities
+
+<h3>Find Locations</h3>
+
+<div class="mb-3">
+    <label>Latitude:</label>
+    <input type="number" @bind="Latitude" class="form-control" step="0.0001"/>
+</div>
+
+<div class="mb-3">
+    <label>Longitude:</label>
+    <input type="number" @bind="Longitude" class="form-control" step="0.0001"/>
+</div>
+
+<div class="mb-3">
+    <label>Type:</label>
+    <select class="form-control" @onchange='e => IsIndoor = e.Value.ToString() == "indoor"'>
+        <option value="indoor">Indoor</option>
+        <option value="outdoor">Outdoor</option>
+    </select>
+</div>
+
+<div class="mb-3">
+    <label>Results:</label>
+    <input type="number" @bind="ResultCount" class="form-control"/>
+</div>
+
+<button class="btn btn-primary me-2" @onclick="FindLocations">Find Closest</button>
+<button class="btn btn-secondary" @onclick="OpenFilters">Search with Filters</button>
+
+@if (ShowFilters)
+{
+    <div class="card mt-3 p-3">
+        <h5>Filters</h5>
+        @foreach (var filter in GetActiveFilters())
+        {
+            <div class="mb-2">
+                <label>@filter.DisplayName</label>
+                @if (filter.PropertyType == typeof(bool) || filter.PropertyType == typeof(bool?))
+                {
+                    <input type="checkbox" @onchange="e => filter.Value = e.Value" class="ms-2"/>
+                }
+                else if (filter.PropertyType == typeof(DateTime) || filter.PropertyType == typeof(DateTime?))
+                {
+                    <input type="date" class="form-control" @onchange="e => filter.Value = e.Value"/>
+                }
+                else
+                {
+                    <input type="text" class="form-control" @onchange="e => filter.Value = e.Value?.ToString()"/>
+                }
+            </div>
+        }
+        <button class="btn btn-primary me-2" @onclick="ApplyFilters">Apply</button>
+        <button class="btn btn-outline-secondary" @onclick="ClearFilters">Clear</button>
+    </div>
+}
+
+@if (LocationResults != null && LocationResults.Any())
+{
+    <div class="mt-3">
+        <h5>Results</h5>
+        <div class="mb-2">
+            <strong>Columns: </strong>
+            @foreach (var col in AllColumns)
+            {
+                <label class="me-3">
+                    <input type="checkbox" checked="@SelectedColumns.Contains(col)"
+                           @onchange="e => ToggleColumn(col, (bool)e.Value)"/> @col
+                </label>
+            }
+        </div>
+
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    @foreach (var col in SelectedColumns)
+                    {
+                        <th>@col</th>
+                    }
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var loc in LocationResults)
+                {
+                    <tr class="@(SelectedLocation == loc ? "table-primary" : "")"
+                        @onclick="() => SelectedLocation = loc" style="cursor:pointer">
+                        @if (SelectedColumns.Contains("Name")) { <td>@loc.Name</td> }
+                        @if (SelectedColumns.Contains("Address")) { <td>@loc.Address</td> }
+                        @if (SelectedColumns.Contains("Type")) { <td>@loc.LocationType</td> }
+                        @if (SelectedColumns.Contains("Rating")) { <td>@loc.Rating</td> }
+                        @if (SelectedColumns.Contains("Noise Level")) { <td>@loc.NoiseLevel</td> }
+                        @if (SelectedColumns.Contains("WiFi")) { <td>@loc.HasWifi</td> }
+                        <td>
+                            <button class="btn btn-sm btn-warning me-1" 
+                                    @onclick="() => MarkInactive(loc)">Inactive</button>
+                            <button class="btn btn-sm btn-info" 
+                                    @onclick="() => OpenReview(loc)">Review</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@if (ShowReview && SelectedLocation != null)
+{
+    <div class="card mt-3 p-3">
+        <h5>Add Review for @SelectedLocation.Name</h5>
+        <div class="mb-2">
+            <label>Author:</label>
+            <input type="text" @bind="ReviewAuthor" class="form-control"/>
+        </div>
+        <div class="mb-2">
+            <label>Rating (1-5):</label>
+            <input type="number" @bind="ReviewRating" min="1" max="5" class="form-control"/>
+        </div>
+        <div class="mb-2">
+            <label>Comment:</label>
+            <textarea @bind="ReviewComment" class="form-control" rows="3"></textarea>
+        </div>
+        <button class="btn btn-success" @onclick="SubmitReview">Submit Review</button>
+    </div>
+}
+
+@if (!string.IsNullOrEmpty(Message))
+{
+    <div class="alert alert-success mt-3">@Message</div>
+}
+
+@code {
+    [Inject] LocationViewModel ViewModel { get; set; }
+
+    double Latitude { get; set; } = 42.6977;
+    double Longitude { get; set; } = 23.3219;
+    bool IsIndoor { get; set; } = true;
+    int ResultCount { get; set; } = 3;
+    bool ShowFilters { get; set; }
+    bool ShowReview { get; set; }
+    string ReviewAuthor { get; set; }
+    int ReviewRating { get; set; } = 5;
+    string ReviewComment { get; set; }
+    string Message { get; set; }
+
+    IEnumerable<Location> LocationResults { get; set; }
+    Location SelectedLocation { get; set; }
+
+    List<string> AllColumns = new() { "Name", "Address", "Type", "Rating", "Noise Level", "WiFi" };
+    List<string> SelectedColumns = new() { "Name", "Address", "Type", "Rating" };
+
+    void FindLocations()
+    {
+        ViewModel.UserLatitude = Latitude;
+        ViewModel.UserLongitude = Longitude;
+        ViewModel.ResultCount = ResultCount;
+        ViewModel.FindClosestLocations(IsIndoor);
+        LocationResults = ViewModel.LocationList.Items;
+        ShowFilters = false;
+    }
+
+    void OpenFilters() => ShowFilters = !ShowFilters;
+
+    List<FilterProperty> GetActiveFilters() =>
+        IsIndoor ? ViewModel.IndoorFilter.FilterProperties : ViewModel.OutdoorFilter.FilterProperties;
+
+    void ApplyFilters()
+    {
+        FindLocations();
+        ShowFilters = false;
+    }
+
+    void ClearFilters()
+    {
+        ViewModel.IndoorFilter.ClearFilters();
+        ViewModel.OutdoorFilter.ClearFilters();
+    }
+
+    void ToggleColumn(string col, bool add)
+    {
+        if (add && !SelectedColumns.Contains(col)) SelectedColumns.Add(col);
+        else if (!add) SelectedColumns.Remove(col);
+    }
+
+    void MarkInactive(Location loc)
+    {
+        ViewModel.SetInactive(loc.Id);
+        FindLocations();
+        Message = $"'{loc.Name}' marked as inactive.";
+    }
+
+    void OpenReview(Location loc)
+    {
+        SelectedLocation = loc;
+        ShowReview = true;
+        ReviewAuthor = "";
+        ReviewRating = 5;
+        ReviewComment = "";
+    }
+
+    void SubmitReview()
+    {
+        var review = new Review
+        {
+            LocationId = SelectedLocation.Id,
+            Author = ReviewAuthor,
+            Rating = ReviewRating,
+            Comment = ReviewComment,
+            Date = DateTime.Now
+        };
+        ViewModel.AddReview(review);
+        ShowReview = false;
+        Message = "Review added successfully!";
+        FindLocations();
+    }
+}

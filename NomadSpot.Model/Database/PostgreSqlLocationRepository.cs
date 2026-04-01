@@ -29,11 +29,30 @@ namespace NomadSpot.Model.Database
         {
             using var conn = new NpgsqlConnection(_connectionString);
             var sql = new StringBuilder("SELECT * FROM Locations WHERE IsActive = TRUE");
-            foreach (var filter in filters)
-                sql.Append($" AND {filter.Key} = @{filter.Key}");
+            var parameters = new DynamicParameters();
 
-            var indoor = conn.Query<IndoorLocation>(sql.ToString() + " AND LocationType = 'Indoor'", filters).Cast<Location>();
-            var outdoor = conn.Query<OutdoorLocation>(sql.ToString() + " AND LocationType = 'Outdoor'", filters).Cast<Location>();
+            foreach (var filter in filters)
+            {
+                sql.Append($" AND {filter.Key} = @{filter.Key}");
+                if (filter.Value is string strVal)
+                {
+                    if (int.TryParse(strVal, out int intVal))
+                        parameters.Add(filter.Key, intVal);
+                    else if (double.TryParse(strVal, out double dblVal))
+                        parameters.Add(filter.Key, dblVal);
+                    else if (bool.TryParse(strVal, out bool boolVal))
+                        parameters.Add(filter.Key, boolVal);
+                    else
+                        parameters.Add(filter.Key, strVal);
+                }
+                else
+                {
+                    parameters.Add(filter.Key, filter.Value);
+                }
+            }
+
+            var indoor = conn.Query<IndoorLocation>(sql.ToString() + " AND LocationType = 'Indoor'", parameters).Cast<Location>();
+            var outdoor = conn.Query<OutdoorLocation>(sql.ToString() + " AND LocationType = 'Outdoor'", parameters).Cast<Location>();
             return indoor.Concat(outdoor);
         }
 
