@@ -27,18 +27,35 @@ namespace NomadSpot.WPF.Views
         private void UpdateColumns()
         {
             if (LocationsGrid == null) return;
-            LocationsGrid.Columns.Clear();
 
-            if (ColName.IsChecked == true)
-                LocationsGrid.Columns.Add(new DataGridTextColumn { Header = "Name", Binding = new System.Windows.Data.Binding("Name") });
-            if (ColAddress.IsChecked == true)
-                LocationsGrid.Columns.Add(new DataGridTextColumn { Header = "Address", Binding = new System.Windows.Data.Binding("Address") });
-            if (ColRating.IsChecked == true)
-                LocationsGrid.Columns.Add(new DataGridTextColumn { Header = "Rating", Binding = new System.Windows.Data.Binding("Rating") });
-            if (ColNoise.IsChecked == true)
-                LocationsGrid.Columns.Add(new DataGridTextColumn { Header = "Noise Level", Binding = new System.Windows.Data.Binding("NoiseLevel") });
-            if (ColWifi.IsChecked == true)
-                LocationsGrid.Columns.Add(new DataGridTextColumn { Header = "WiFi", Binding = new System.Windows.Data.Binding("HasWifi") });
+            var columns = new List<string>();
+            if (ColName.IsChecked == true)    columns.Add("Name");
+            if (ColAddress.IsChecked == true) columns.Add("Address");
+            if (ColRating.IsChecked == true)  columns.Add("Rating");
+            if (ColNoise.IsChecked == true)   columns.Add("NoiseLevel");
+            if (ColWifi.IsChecked == true)    columns.Add("HasWifi");
+
+            _viewModel.LocationList.SetColumns(columns);
+
+            var bindings = new Dictionary<string, (string header, string path)>
+            {
+                ["Name"]      = ("Name",        "Name"),
+                ["Address"]   = ("Address",     "Address"),
+                ["Rating"]    = ("Rating",      "Rating"),
+                ["NoiseLevel"]= ("Noise Level", "NoiseLevel"),
+                ["HasWifi"]   = ("WiFi",        "HasWifi"),
+            };
+
+            LocationsGrid.Columns.Clear();
+            foreach (var col in _viewModel.LocationList.VisibleColumns ?? columns)
+            {
+                if (bindings.TryGetValue(col, out var info))
+                    LocationsGrid.Columns.Add(new DataGridTextColumn
+                    {
+                        Header  = info.header,
+                        Binding = new System.Windows.Data.Binding(info.path)
+                    });
+            }
         }
 
         private void LocationsGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -62,6 +79,27 @@ namespace NomadSpot.WPF.Views
                 LocationsGrid.ItemsSource = _viewModel.LocationList.Items;
             };
             window.Show();
+        }
+
+        private void ViewReviews_Click(object sender, RoutedEventArgs e)
+        {
+            if (_viewModel.LocationList.SelectedItem == null)
+            {
+                MessageBox.Show("Please select a location first.");
+                return;
+            }
+
+            var location = _viewModel.LocationList.SelectedItem;
+            _viewModel.LoadReviews(location.Id);
+
+            var window = new ReviewListWindow(_viewModel, location.Name);
+            window.Show();
+        }
+
+        private void Clear_Click(object sender, RoutedEventArgs e)
+        {
+            _viewModel.LocationList.Clear();
+            LocationsGrid.ItemsSource = null;
         }
 
         private void MarkInactive_Click(object sender, RoutedEventArgs e)
