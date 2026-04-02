@@ -7,7 +7,7 @@ namespace NomadSpot.WPF
 {
     public partial class MainWindow : Window
     {
-        private readonly LocationViewModel _viewModel;
+        private LocationViewModel _viewModel;
 
         public MainWindow()
         {
@@ -72,6 +72,24 @@ namespace NomadSpot.WPF
         {
             var window = new Views.AddLocationWindow(_viewModel);
             window.Show();
+        }
+
+        private void DB_Changed(object sender, RoutedEventArgs e)
+        {
+            var dbType = PgRadio.IsChecked == true ? DatabaseType.PostgreSQL : DatabaseType.SQLite;
+            var connStr = dbType == DatabaseType.PostgreSQL
+                ? "Host=localhost;Database=nomadspot;Username=postgres;Password=tea123"
+                : "Data Source=nomadspot.db";
+
+            var factory = new RepositoryFactory(dbType, connStr);
+            var initializer = new DatabaseInitializer(dbType, connStr);
+            initializer.Initialize();
+
+            _viewModel = new LocationViewModel(
+                factory.CreateLocationRepository(),
+                factory.CreateReviewRepository());
+
+            DataContext = _viewModel;
         }
     }
 }

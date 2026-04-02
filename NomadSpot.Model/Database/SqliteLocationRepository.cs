@@ -16,11 +16,6 @@ namespace NomadSpot.Model.Database
             _connectionString = connectionString;
         }
 
-        public IEnumerable<Location> GetAll()
-        {
-            using var conn = new SqliteConnection(_connectionString);
-            return conn.Query<Location>("SELECT * FROM Locations WHERE IsActive = 1");
-        }
 
         public Location GetById(int id)
         {
@@ -29,13 +24,41 @@ namespace NomadSpot.Model.Database
                 "SELECT * FROM Locations WHERE Id = @Id", new { Id = id });
         }
 
+        public IEnumerable<Location> GetAll()
+        {
+            using var conn = new SqliteConnection(_connectionString);
+            var indoor = conn.Query<IndoorLocation>("SELECT * FROM Locations WHERE IsActive = 1 AND LocationType = 'Indoor'").Cast<Location>();
+            var outdoor = conn.Query<OutdoorLocation>("SELECT * FROM Locations WHERE IsActive = 1 AND LocationType = 'Outdoor'").Cast<Location>();
+            return indoor.Concat(outdoor);
+        }
+
         public IEnumerable<Location> GetByFilter(Dictionary<string, object> filters)
         {
             using var conn = new SqliteConnection(_connectionString);
             var sql = new StringBuilder("SELECT * FROM Locations WHERE IsActive = 1");
+            var parameters = new DynamicParameters();
+
             foreach (var filter in filters)
+            {
                 sql.Append($" AND {filter.Key} = @{filter.Key}");
-            return conn.Query<Location>(sql.ToString(), filters);
+                if (filter.Value is string strVal)
+                {
+                    if (int.TryParse(strVal, out int intVal))
+                        parameters.Add(filter.Key, intVal);
+                    else if (double.TryParse(strVal, out double dblVal))
+                        parameters.Add(filter.Key, dblVal);
+                    else if (bool.TryParse(strVal, out bool boolVal))
+                        parameters.Add(filter.Key, boolVal);
+                    else
+                        parameters.Add(filter.Key, strVal);
+                }
+                else
+                    parameters.Add(filter.Key, filter.Value);
+            }
+
+            var indoor = conn.Query<IndoorLocation>(sql.ToString() + " AND LocationType = 'Indoor'", parameters).Cast<Location>();
+            var outdoor = conn.Query<OutdoorLocation>(sql.ToString() + " AND LocationType = 'Outdoor'", parameters).Cast<Location>();
+            return indoor.Concat(outdoor);
         }
 
         public void Add(Location location)
