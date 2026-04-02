@@ -52,7 +52,7 @@ namespace NomadSpot.WPF
         {
             bool indoorOnly = ((ComboBoxItem)LocationTypeBox.SelectedItem).Content.ToString() == "Indoor";
 
-            dynamic filter = indoorOnly ? _viewModel.IndoorFilter : (dynamic)_viewModel.OutdoorFilter;
+            IFilterViewModel filter = indoorOnly ? _viewModel.IndoorFilter : (IFilterViewModel)_viewModel.OutdoorFilter;
 
             Action onSearch = () =>
             {

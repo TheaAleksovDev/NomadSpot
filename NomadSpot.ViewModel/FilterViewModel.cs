@@ -12,7 +12,7 @@ namespace NomadSpot.ViewModel
         public object Value { get; set; }
     }
 
-    public class FilterViewModel<T> : BaseViewModel
+    public class FilterViewModel<T> : BaseViewModel, IFilterViewModel
     {
         private List<FilterProperty> _filterProperties;
 
