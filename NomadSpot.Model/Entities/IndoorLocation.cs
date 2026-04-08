@@ -9,7 +9,7 @@ namespace NomadSpot.Model.Entities
         public int ComfortLevel { get; set; }
         public int PriceLevel { get; set; }
         public string OpeningHours { get; set; }
-        public IndoorType Type { get; set; }
+        public IndoorType IndoorType { get; set; }
     }
 
     public enum IndoorType

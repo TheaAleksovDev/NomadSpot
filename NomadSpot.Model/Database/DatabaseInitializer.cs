@@ -54,24 +54,16 @@ namespace NomadSpot.Model.Database
                     HasPowerOutlets BOOLEAN DEFAULT FALSE,
                     LastVerified TIMESTAMP,
                     IsActive BOOLEAN DEFAULT TRUE,
-                    LocationType VARCHAR(20) NOT NULL
-                );
-
-                CREATE TABLE IF NOT EXISTS OutdoorLocations (
-                    Id INTEGER PRIMARY KEY REFERENCES Locations(Id),
+                    LocationType VARCHAR(20) NOT NULL,
+                    ComfortLevel INTEGER DEFAULT 0,
+                    PriceLevel INTEGER DEFAULT 0,
+                    OpeningHours VARCHAR(50),
+                    IndoorType INTEGER DEFAULT 0,
                     HasBenches BOOLEAN DEFAULT FALSE,
                     HasShade BOOLEAN DEFAULT FALSE,
                     PetFriendly BOOLEAN DEFAULT FALSE,
                     HasPublicToilet BOOLEAN DEFAULT FALSE,
                     NearShops BOOLEAN DEFAULT FALSE
-                );
-
-                CREATE TABLE IF NOT EXISTS IndoorLocations (
-                    Id INTEGER PRIMARY KEY REFERENCES Locations(Id),
-                    ComfortLevel INTEGER DEFAULT 0,
-                    PriceLevel INTEGER DEFAULT 0,
-                    OpeningHours VARCHAR(50),
-                    IndoorType INTEGER DEFAULT 0
                 );
 
                 CREATE TABLE IF NOT EXISTS Reviews (

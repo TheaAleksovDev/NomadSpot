@@ -19,7 +19,7 @@ namespace NomadSpot.Model.Database
         {
             using var conn = new NpgsqlConnection(_connectionString);
             return conn.Query<Review>(
-                "SELECT * FROM Reviews WHERE LocationId = @LocationId",
+                "SELECT * FROM reviews WHERE locationid = @LocationId",
                 new { LocationId = locationId });
         }
 
@@ -27,7 +27,7 @@ namespace NomadSpot.Model.Database
         {
             using var conn = new NpgsqlConnection(_connectionString);
             conn.Execute(@"
-                INSERT INTO Reviews (LocationId, Author, Comment, Rating, Date)
+                INSERT INTO reviews (locationid, author, comment, rating, date)
                 VALUES (@LocationId, @Author, @Comment, @Rating, @Date)",
                 review);
         }

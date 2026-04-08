@@ -13,9 +13,13 @@ namespace NomadSpot.WPF
         {
             InitializeComponent();
 
-            var factory = new RepositoryFactory(
-                DatabaseType.PostgreSQL,
-                "Host=localhost;Database=nomadspot;Username=postgres;Password=tea123");
+            var dbType = DatabaseType.PostgreSQL;
+            var connStr = "Host=localhost;Database=nomadspot;Username=postgres;Password=tea123";
+
+            var initializer = new DatabaseInitializer(dbType, connStr);
+            initializer.Initialize();
+
+            var factory = new RepositoryFactory(dbType, connStr);
 
             _viewModel = new LocationViewModel(
                 factory.CreateLocationRepository(),

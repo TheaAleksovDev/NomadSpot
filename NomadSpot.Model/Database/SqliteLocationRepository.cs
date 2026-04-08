@@ -18,7 +18,7 @@ namespace NomadSpot.Model.Database
 
 
         public Location GetById(int id)
-        {
+        { 
             using var conn = new SqliteConnection(_connectionString);
             return conn.QueryFirstOrDefault<Location>(
                 "SELECT * FROM Locations WHERE Id = @Id", new { Id = id });
@@ -40,7 +40,7 @@ namespace NomadSpot.Model.Database
 
             foreach (var filter in filters)
             {
-                sql.Append($" AND {filter.Key} = @{filter.Key}");
+                sql.Append($" AND {filter.Key.ToLower()} = @{filter.Key}");
                 if (filter.Value is string strVal)
                 {
                     if (int.TryParse(strVal, out int intVal))
@@ -64,12 +64,28 @@ namespace NomadSpot.Model.Database
         public void Add(Location location)
         {
             using var conn = new SqliteConnection(_connectionString);
-            conn.Execute(@"
-                INSERT INTO Locations 
-                (Name, Address, Latitude, Longitude, Rating, NoiseLevel, HasWifi, HasPowerOutlets, LastVerified, IsActive, LocationType)
-                VALUES 
-                (@Name, @Address, @Latitude, @Longitude, @Rating, @NoiseLevel, @HasWifi, @HasPowerOutlets, @LastVerified, @IsActive, @LocationType)",
-                location);
+            if (location is IndoorLocation indoor)
+            {
+                conn.Execute(@"
+                    INSERT INTO Locations
+                    (Name, Address, Latitude, Longitude, Rating, NoiseLevel, HasWifi, HasPowerOutlets, LastVerified, IsActive, LocationType,
+                     ComfortLevel, PriceLevel, OpeningHours, IndoorType)
+                    VALUES
+                    (@Name, @Address, @Latitude, @Longitude, @Rating, @NoiseLevel, @HasWifi, @HasPowerOutlets, @LastVerified, @IsActive, @LocationType,
+                     @ComfortLevel, @PriceLevel, @OpeningHours, @IndoorType)",
+                    indoor);
+            }
+            else if (location is OutdoorLocation outdoor)
+            {
+                conn.Execute(@"
+                    INSERT INTO Locations
+                    (Name, Address, Latitude, Longitude, Rating, NoiseLevel, HasWifi, HasPowerOutlets, LastVerified, IsActive, LocationType,
+                     HasBenches, HasShade, PetFriendly, HasPublicToilet, NearShops)
+                    VALUES
+                    (@Name, @Address, @Latitude, @Longitude, @Rating, @NoiseLevel, @HasWifi, @HasPowerOutlets, @LastVerified, @IsActive, @LocationType,
+                     @HasBenches, @HasShade, @PetFriendly, @HasPublicToilet, @NearShops)",
+                    outdoor);
+            }
         }
 
         public void Update(Location location)
