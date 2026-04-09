@@ -14,7 +14,7 @@ namespace NomadSpot.WPF
             InitializeComponent();
 
             var dbType = DatabaseType.PostgreSQL;
-            var connStr = "Host=localhost;Database=nomadspot;Username=postgres;Password=tea123";
+            var connStr = Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING")!;
 
             var initializer = new DatabaseInitializer(dbType, connStr);
             initializer.Initialize();
@@ -78,12 +78,27 @@ namespace NomadSpot.WPF
             window.Show();
         }
 
+        private async void UseMyLocation_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var geolocator = new Windows.Devices.Geolocation.Geolocator();
+                var position = await geolocator.GetGeopositionAsync();
+                LatitudeBox.Text = position.Coordinate.Point.Position.Latitude.ToString("F6");
+                LongitudeBox.Text = position.Coordinate.Point.Position.Longitude.ToString("F6");
+            }
+            catch
+            {
+                MessageBox.Show("Could not get location. Make sure location access is enabled in Windows Settings.");
+            }
+        }
+
         private void DB_Changed(object sender, RoutedEventArgs e)
         {
             var dbType = PgRadio.IsChecked == true ? DatabaseType.PostgreSQL : DatabaseType.SQLite;
             var connStr = dbType == DatabaseType.PostgreSQL
-                ? "Host=localhost;Database=nomadspot;Username=postgres;Password=tea123"
-                : "Data Source=nomadspot.db";
+                ? Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING")!
+                : Environment.GetEnvironmentVariable("SQLITE_CONNECTION_STRING")!;
 
             var factory = new RepositoryFactory(dbType, connStr);
             var initializer = new DatabaseInitializer(dbType, connStr);

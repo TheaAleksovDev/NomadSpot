@@ -1,32 +1,54 @@
-﻿<Window x:Class="NomadSpot.WPF.Views.LocationListWindow"
+<Window x:Class="NomadSpot.WPF.Views.LocationListWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Locations" Height="500" Width="700"
+        Title="Locations" Height="600" Width="800"
         WindowStartupLocation="CenterScreen">
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
-            <TextBlock Text="Columns:" VerticalAlignment="Center" Margin="0,0,10,0"/>
-            <CheckBox x:Name="ColName" Content="Name" IsChecked="True" Margin="5,0" Checked="Column_Changed" Unchecked="Column_Changed"/>
-            <CheckBox x:Name="ColAddress" Content="Address" IsChecked="True" Margin="5,0" Checked="Column_Changed" Unchecked="Column_Changed"/>
-            <CheckBox x:Name="ColRating" Content="Rating" IsChecked="True" Margin="5,0" Checked="Column_Changed" Unchecked="Column_Changed"/>
-            <CheckBox x:Name="ColNoise" Content="Noise Level" Margin="5,0" Checked="Column_Changed" Unchecked="Column_Changed"/>
-            <CheckBox x:Name="ColWifi" Content="WiFi" Margin="5,0" Checked="Column_Changed" Unchecked="Column_Changed"/>
-        </StackPanel>
+        <WrapPanel x:Name="ColumnsPanel" Grid.Row="0" Margin="0,0,0,10"/>
 
-        <DataGrid x:Name="LocationsGrid" Grid.Row="1" 
+        <DataGrid x:Name="LocationsGrid" Grid.Row="1"
                   AutoGenerateColumns="False"
                   IsReadOnly="True"
                   SelectionMode="Single"
                   SelectionChanged="LocationsGrid_SelectionChanged">
         </DataGrid>
 
-        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,10,0,0">
+        <!-- Detail panel shown when a row is selected -->
+        <Border x:Name="DetailPanel" Grid.Row="2" Visibility="Collapsed"
+                BorderBrush="#ccc" BorderThickness="1" CornerRadius="4"
+                Margin="0,8,0,0" Padding="10">
+            <StackPanel>
+                <DockPanel>
+                    <TextBlock x:Name="DetailTitle" FontSize="14" FontWeight="Bold" DockPanel.Dock="Left"/>
+                    <Button Content="Close" HorizontalAlignment="Right" Padding="8,2"
+                            Click="CloseDetail_Click"/>
+                </DockPanel>
+                <ItemsControl x:Name="DetailItems" Margin="0,6,0,0">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Margin="0,0,20,6" Width="160">
+                                <TextBlock Text="{Binding Key}" Foreground="Gray" FontSize="11"/>
+                                <TextBlock Text="{Binding Value}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </Border>
+
+        <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,10,0,0">
             <Button Content="Add Review" Margin="0,0,10,0" Padding="10,5" Click="AddReview_Click"/>
             <Button Content="View Reviews" Margin="0,0,10,0" Padding="10,5" Click="ViewReviews_Click"/>
             <Button Content="Mark Inactive" Margin="0,0,10,0" Padding="10,5" Click="MarkInactive_Click"/>

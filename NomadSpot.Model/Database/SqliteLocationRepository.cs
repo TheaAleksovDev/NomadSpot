@@ -1,8 +1,9 @@
-﻿using Dapper;
+using Dapper;
 using Microsoft.Data.Sqlite;
 using NomadSpot.Model.Entities;
 using NomadSpot.Model.Repositories;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace NomadSpot.Model.Database
@@ -16,12 +17,15 @@ namespace NomadSpot.Model.Database
             _connectionString = connectionString;
         }
 
-
         public Location GetById(int id)
-        { 
+        {
             using var conn = new SqliteConnection(_connectionString);
-            return conn.QueryFirstOrDefault<Location>(
-                "SELECT * FROM Locations WHERE Id = @Id", new { Id = id });
+            var locationType = conn.QueryFirstOrDefault<string>(
+                "SELECT LocationType FROM Locations WHERE Id = @Id", new { Id = id });
+            if (locationType == "Indoor")
+                return conn.QueryFirstOrDefault<IndoorLocation>("SELECT * FROM Locations WHERE Id = @Id", new { Id = id });
+            else
+                return conn.QueryFirstOrDefault<OutdoorLocation>("SELECT * FROM Locations WHERE Id = @Id", new { Id = id });
         }
 
         public IEnumerable<Location> GetAll()
@@ -35,12 +39,14 @@ namespace NomadSpot.Model.Database
         public IEnumerable<Location> GetByFilter(Dictionary<string, object> filters)
         {
             using var conn = new SqliteConnection(_connectionString);
-            var sql = new StringBuilder("SELECT * FROM Locations WHERE IsActive = 1");
+            var sql = new StringBuilder("SELECT * FROM Locations WHERE 1=1");
             var parameters = new DynamicParameters();
+
+            filters.TryGetValue("LocationType", out var locationTypeFilter);
 
             foreach (var filter in filters)
             {
-                sql.Append($" AND {filter.Key.ToLower()} = @{filter.Key}");
+                sql.Append($" AND {filter.Key} = @{filter.Key}");
                 if (filter.Value is string strVal)
                 {
                     if (int.TryParse(strVal, out int intVal))
@@ -56,9 +62,16 @@ namespace NomadSpot.Model.Database
                     parameters.Add(filter.Key, filter.Value);
             }
 
-            var indoor = conn.Query<IndoorLocation>(sql.ToString() + " AND LocationType = 'Indoor'", parameters).Cast<Location>();
-            var outdoor = conn.Query<OutdoorLocation>(sql.ToString() + " AND LocationType = 'Outdoor'", parameters).Cast<Location>();
-            return indoor.Concat(outdoor);
+            string baseSql = sql.ToString();
+            var results = new List<Location>();
+
+            if (locationTypeFilter?.ToString() != "Outdoor")
+                results.AddRange(conn.Query<IndoorLocation>(baseSql + " AND LocationType = 'Indoor'", parameters).Cast<Location>());
+
+            if (locationTypeFilter?.ToString() != "Indoor")
+                results.AddRange(conn.Query<OutdoorLocation>(baseSql + " AND LocationType = 'Outdoor'", parameters).Cast<Location>());
+
+            return results;
         }
 
         public void Add(Location location)
@@ -68,10 +81,10 @@ namespace NomadSpot.Model.Database
             {
                 conn.Execute(@"
                     INSERT INTO Locations
-                    (Name, Address, Latitude, Longitude, Rating, NoiseLevel, HasWifi, HasPowerOutlets, LastVerified, IsActive, LocationType,
+                    (Name, Address, Latitude, Longitude, Rating, NoiseLevel, WifiStrength, HasPowerOutlets, IsActive, LocationType,
                      ComfortLevel, PriceLevel, OpeningHours, IndoorType)
                     VALUES
-                    (@Name, @Address, @Latitude, @Longitude, @Rating, @NoiseLevel, @HasWifi, @HasPowerOutlets, @LastVerified, @IsActive, @LocationType,
+                    (@Name, @Address, @Latitude, @Longitude, @Rating, @NoiseLevel, @WifiStrength, @HasPowerOutlets, @IsActive, @LocationType,
                      @ComfortLevel, @PriceLevel, @OpeningHours, @IndoorType)",
                     indoor);
             }
@@ -79,11 +92,11 @@ namespace NomadSpot.Model.Database
             {
                 conn.Execute(@"
                     INSERT INTO Locations
-                    (Name, Address, Latitude, Longitude, Rating, NoiseLevel, HasWifi, HasPowerOutlets, LastVerified, IsActive, LocationType,
-                     HasBenches, HasShade, PetFriendly, HasPublicToilet, NearShops)
+                    (Name, Address, Latitude, Longitude, Rating, NoiseLevel, WifiStrength, HasPowerOutlets, IsActive, LocationType,
+                     HasBenches, HasShade, PetFriendly, HasPublicToilet, NearShops, OutdoorType)
                     VALUES
-                    (@Name, @Address, @Latitude, @Longitude, @Rating, @NoiseLevel, @HasWifi, @HasPowerOutlets, @LastVerified, @IsActive, @LocationType,
-                     @HasBenches, @HasShade, @PetFriendly, @HasPublicToilet, @NearShops)",
+                    (@Name, @Address, @Latitude, @Longitude, @Rating, @NoiseLevel, @WifiStrength, @HasPowerOutlets, @IsActive, @LocationType,
+                     @HasBenches, @HasShade, @PetFriendly, @HasPublicToilet, @NearShops, @OutdoorType)",
                     outdoor);
             }
         }
@@ -92,11 +105,16 @@ namespace NomadSpot.Model.Database
         {
             using var conn = new SqliteConnection(_connectionString);
             conn.Execute(@"
-                UPDATE Locations SET 
+                UPDATE Locations SET
                 Name = @Name, Address = @Address, Rating = @Rating,
-                NoiseLevel = @NoiseLevel, HasWifi = @HasWifi,
-                HasPowerOutlets = @HasPowerOutlets, LastVerified = @LastVerified
+                NoiseLevel = @NoiseLevel, WifiStrength = @WifiStrength,
+                HasPowerOutlets = @HasPowerOutlets
                 WHERE Id = @Id", location);
+
+            if (location is IndoorLocation indoor)
+                conn.Execute(@"
+                    UPDATE Locations SET ComfortLevel = @ComfortLevel, PriceLevel = @PriceLevel
+                    WHERE Id = @Id", indoor);
         }
 
         public void SetInactive(int id)

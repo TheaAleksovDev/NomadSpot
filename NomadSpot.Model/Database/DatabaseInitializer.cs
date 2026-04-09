@@ -1,4 +1,4 @@
-﻿using Npgsql;
+using Npgsql;
 using Microsoft.Data.Sqlite;
 using System;
 
@@ -50,9 +50,8 @@ namespace NomadSpot.Model.Database
                     Longitude DOUBLE PRECISION NOT NULL,
                     Rating DOUBLE PRECISION DEFAULT 0,
                     NoiseLevel INTEGER DEFAULT 0,
-                    HasWifi BOOLEAN DEFAULT FALSE,
+                    WifiStrength INTEGER DEFAULT 0,
                     HasPowerOutlets BOOLEAN DEFAULT FALSE,
-                    LastVerified TIMESTAMP,
                     IsActive BOOLEAN DEFAULT TRUE,
                     LocationType VARCHAR(20) NOT NULL,
                     ComfortLevel INTEGER DEFAULT 0,
@@ -63,7 +62,8 @@ namespace NomadSpot.Model.Database
                     HasShade BOOLEAN DEFAULT FALSE,
                     PetFriendly BOOLEAN DEFAULT FALSE,
                     HasPublicToilet BOOLEAN DEFAULT FALSE,
-                    NearShops BOOLEAN DEFAULT FALSE
+                    NearShops BOOLEAN DEFAULT FALSE,
+                    OutdoorType INTEGER DEFAULT 0
                 );
 
                 CREATE TABLE IF NOT EXISTS Reviews (
@@ -71,7 +71,13 @@ namespace NomadSpot.Model.Database
                     LocationId INTEGER REFERENCES Locations(Id),
                     Author VARCHAR(100),
                     Comment TEXT,
-                    Rating INTEGER,
+                    Rating INTEGER DEFAULT 0,
+                    NoiseLevel INTEGER DEFAULT 0,
+                    WifiStrength INTEGER DEFAULT 0,
+                    ComfortLevel INTEGER DEFAULT 0,
+                    PriceLevel INTEGER DEFAULT 0,
+                    Cleanliness INTEGER DEFAULT 0,
+                    Crowdedness INTEGER DEFAULT 0,
                     Date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
             ";

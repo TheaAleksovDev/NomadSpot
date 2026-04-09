@@ -1,0 +1,59 @@
+@using Microsoft.JSInterop
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+<div class="mb-2 d-flex align-items-center gap-2">
+    <small class="text-muted">Lat: @Lat.ToString("F5") | Lng: @Lng.ToString("F5")</small>
+    <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="UseMyLocation">
+        Use My Location
+    </button>
+</div>
+<div @ref="_mapContainer" style="height:280px; width:100%; border:1px solid #dee2e6; border-radius:4px;"></div>
+
+@code {
+    [Parameter] public double Lat { get; set; } = 42.6977;
+    [Parameter] public double Lng { get; set; } = 23.3219;
+    [Parameter] public EventCallback<(double Lat, double Lng)> OnCoordinatesSelected { get; set; }
+
+    private ElementReference _mapContainer;
+    private DotNetObjectReference<MapPicker> _ref;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _ref = DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("mapInterop.initMap", _mapContainer, Lat, Lng, _ref);
+        }
+    }
+
+    private async Task UseMyLocation()
+    {
+        _ref ??= DotNetObjectReference.Create(this);
+        await JS.InvokeVoidAsync("mapInterop.getLocation", _ref);
+    }
+
+    [JSInvokable]
+    public async Task OnMapClick(double lat, double lng)
+    {
+        Lat = lat;
+        Lng = lng;
+        await OnCoordinatesSelected.InvokeAsync((lat, lng));
+        StateHasChanged();
+    }
+
+    [JSInvokable]
+    public async Task OnLocationReceived(double lat, double lng)
+    {
+        Lat = lat;
+        Lng = lng;
+        await JS.InvokeVoidAsync("mapInterop.updateMarker", _mapContainer, lat, lng);
+        await OnCoordinatesSelected.InvokeAsync((lat, lng));
+        StateHasChanged();
+    }
+
+    [JSInvokable]
+    public Task OnLocationError(string error) => Task.CompletedTask;
+
+    public async ValueTask DisposeAsync() => _ref?.Dispose();
+}

@@ -1,6 +1,8 @@
-﻿using NomadSpot.Model.Entities;
+using NomadSpot.Model.Entities;
 using NomadSpot.ViewModel;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -9,59 +11,87 @@ namespace NomadSpot.WPF.Views
     public partial class LocationListWindow : Window
     {
         private readonly LocationViewModel _viewModel;
+        private readonly string[] _defaultColumns = { "Name", "Address", "Rating", "LocationType" };
 
         public LocationListWindow(LocationViewModel viewModel)
         {
             InitializeComponent();
             _viewModel = viewModel;
             DataContext = _viewModel;
+            BuildColumnCheckboxes();
             UpdateColumns();
             LocationsGrid.ItemsSource = _viewModel.LocationList.Items;
         }
 
-        private void Column_Changed(object sender, RoutedEventArgs e)
+        private void BuildColumnCheckboxes()
         {
-            UpdateColumns();
+            ColumnsPanel.Children.Clear();
+            ColumnsPanel.Children.Add(new TextBlock
+            {
+                Text = "Columns:",
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 0, 10, 0)
+            });
+
+            foreach (var col in _viewModel.LocationList.GetAllColumnNames())
+            {
+                var cb = new CheckBox
+                {
+                    Content = col,
+                    IsChecked = _defaultColumns.Contains(col),
+                    Margin = new Thickness(5, 0, 0, 0),
+                    VerticalAlignment = VerticalAlignment.Center
+                };
+                cb.Checked += (s, e) => UpdateColumns();
+                cb.Unchecked += (s, e) => UpdateColumns();
+                ColumnsPanel.Children.Add(cb);
+            }
         }
 
         private void UpdateColumns()
         {
             if (LocationsGrid == null) return;
 
-            var columns = new List<string>();
-            if (ColName.IsChecked == true)    columns.Add("Name");
-            if (ColAddress.IsChecked == true) columns.Add("Address");
-            if (ColRating.IsChecked == true)  columns.Add("Rating");
-            if (ColNoise.IsChecked == true)   columns.Add("NoiseLevel");
-            if (ColWifi.IsChecked == true)    columns.Add("HasWifi");
+            var columns = ColumnsPanel.Children
+                .OfType<CheckBox>()
+                .Where(cb => cb.IsChecked == true)
+                .Select(cb => cb.Content.ToString())
+                .ToList();
 
             _viewModel.LocationList.SetColumns(columns);
 
-            var bindings = new Dictionary<string, (string header, string path)>
-            {
-                ["Name"]      = ("Name",        "Name"),
-                ["Address"]   = ("Address",     "Address"),
-                ["Rating"]    = ("Rating",      "Rating"),
-                ["NoiseLevel"]= ("Noise Level", "NoiseLevel"),
-                ["HasWifi"]   = ("WiFi",        "HasWifi"),
-            };
-
             LocationsGrid.Columns.Clear();
-            foreach (var col in _viewModel.LocationList.VisibleColumns ?? columns)
-            {
-                if (bindings.TryGetValue(col, out var info))
-                    LocationsGrid.Columns.Add(new DataGridTextColumn
-                    {
-                        Header  = info.header,
-                        Binding = new System.Windows.Data.Binding(info.path)
-                    });
-            }
+            foreach (var col in columns)
+                LocationsGrid.Columns.Add(new DataGridTextColumn
+                {
+                    Header = col,
+                    Binding = new System.Windows.Data.Binding(col)
+                });
         }
 
         private void LocationsGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (LocationsGrid.SelectedItem is Location selected)
+            {
                 _viewModel.LocationList.SelectedItem = selected;
+                ShowDetail(selected);
+            }
+        }
+
+        private void ShowDetail(Location loc)
+        {
+            DetailTitle.Text = loc.Name;
+            var props = loc.GetType()
+                .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Select(p => new KeyValuePair<string, object>(p.Name, p.GetValue(loc) ?? "-"))
+                .ToList();
+            DetailItems.ItemsSource = props;
+            DetailPanel.Visibility = Visibility.Visible;
+        }
+
+        private void CloseDetail_Click(object sender, RoutedEventArgs e)
+        {
+            DetailPanel.Visibility = Visibility.Collapsed;
         }
 
         private void AddReview_Click(object sender, RoutedEventArgs e)
@@ -92,7 +122,7 @@ namespace NomadSpot.WPF.Views
             var location = _viewModel.LocationList.SelectedItem;
             _viewModel.LoadReviews(location.Id);
 
-            var window = new ReviewListWindow(_viewModel, location.Name);
+            var window = new ReviewListWindow(_viewModel, location.Name, location.LocationType);
             window.Show();
         }
 
@@ -100,6 +130,7 @@ namespace NomadSpot.WPF.Views
         {
             _viewModel.LocationList.Clear();
             LocationsGrid.ItemsSource = null;
+            DetailPanel.Visibility = Visibility.Collapsed;
         }
 
         private void MarkInactive_Click(object sender, RoutedEventArgs e)
@@ -120,6 +151,7 @@ namespace NomadSpot.WPF.Views
                 _viewModel.FindClosestLocations(_viewModel.LastSearchWasIndoor);
                 LocationsGrid.ItemsSource = null;
                 LocationsGrid.ItemsSource = _viewModel.LocationList.Items;
+                DetailPanel.Visibility = Visibility.Collapsed;
                 MessageBox.Show("Location marked as inactive.");
             }
         }

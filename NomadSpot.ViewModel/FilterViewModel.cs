@@ -10,10 +10,23 @@ namespace NomadSpot.ViewModel
         public string DisplayName { get; set; }
         public Type PropertyType { get; set; }
         public object Value { get; set; }
+        public string[] EnumValues { get; set; }
+        public double? Min { get; set; }
+        public double? Max { get; set; }
+        public bool IsSlider => Min.HasValue && Max.HasValue;
     }
 
     public class FilterViewModel<T> : BaseViewModel, IFilterViewModel
     {
+        private static readonly Dictionary<string, (double Min, double Max)> _sliderRanges = new()
+        {
+            { "Rating",       (1, 5) },
+            { "NoiseLevel",   (1, 5) },
+            { "WifiStrength", (1, 5) },
+            { "ComfortLevel", (1, 5) },
+            { "PriceLevel",   (1, 5) },
+        };
+
         private List<FilterProperty> _filterProperties;
 
         public List<FilterProperty> FilterProperties
@@ -31,14 +44,19 @@ namespace NomadSpot.ViewModel
         {
             FilterProperties = new List<FilterProperty>();
 
-            foreach (var prop in typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance))
+            foreach (var prop in typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                                          .Where(p => p.Name != "IsActive"))
             {
+                _sliderRanges.TryGetValue(prop.Name, out var range);
                 FilterProperties.Add(new FilterProperty
                 {
                     Name = prop.Name,
                     DisplayName = FormatDisplayName(prop.Name),
                     PropertyType = prop.PropertyType,
-                    Value = null
+                    Value = null,
+                    EnumValues = prop.PropertyType.IsEnum ? Enum.GetNames(prop.PropertyType) : null,
+                    Min = range == default ? null : range.Min,
+                    Max = range == default ? null : range.Max,
                 });
             }
         }

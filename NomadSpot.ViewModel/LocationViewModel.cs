@@ -3,6 +3,7 @@ using NomadSpot.Model.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace NomadSpot.ViewModel
 {
@@ -37,6 +38,7 @@ namespace NomadSpot.ViewModel
         public ListViewModel<Review> ReviewList { get; } = new ListViewModel<Review>();
         public FilterViewModel<IndoorLocation> IndoorFilter { get; } = new FilterViewModel<IndoorLocation>();
         public FilterViewModel<OutdoorLocation> OutdoorFilter { get; } = new FilterViewModel<OutdoorLocation>();
+        public FilterViewModel<Review> ReviewFilter { get; } = new FilterViewModel<Review>();
 
         public LocationViewModel(ILocationRepository locationRepository, IReviewRepository reviewRepository)
         {
@@ -55,12 +57,41 @@ namespace NomadSpot.ViewModel
         {
             _reviewRepository.Add(review);
 
-            var reviews = _reviewRepository.GetByLocationId(review.LocationId);
-            double avgRating = reviews.Average(r => r.Rating);
+            var reviews = _reviewRepository.GetByLocationId(review.LocationId).ToList();
 
             var location = _locationRepository.GetById(review.LocationId);
-            location.Rating = avgRating;
-            _locationRepository.Update(location);
+            if (location != null)
+            {
+                location.Rating = reviews.Average(r => r.Rating);
+
+                var noisyReviews = reviews.Where(r => r.NoiseLevel > 0).ToList();
+                if (noisyReviews.Any())
+                    location.NoiseLevel = (int)Math.Round(noisyReviews.Average(r => r.NoiseLevel));
+
+                var wifiReviews = reviews.Where(r => r.WifiStrength > 0).ToList();
+                if (wifiReviews.Any())
+                    location.WifiStrength = (int)Math.Round(wifiReviews.Average(r => r.WifiStrength));
+
+                if (location is Model.Entities.IndoorLocation indoor)
+                {
+                    var comfortReviews = reviews.Where(r => r.ComfortLevel > 0).ToList();
+                    if (comfortReviews.Any())
+                        indoor.ComfortLevel = (int)Math.Round(comfortReviews.Average(r => r.ComfortLevel));
+
+                    var priceReviews = reviews.Where(r => r.PriceLevel > 0).ToList();
+                    if (priceReviews.Any())
+                        indoor.PriceLevel = (int)Math.Round(priceReviews.Average(r => r.PriceLevel));
+                }
+
+                _locationRepository.Update(location);
+            }
+        }
+
+        public void FindReviewsByFilter()
+        {
+            var filters = ReviewFilter.GetActiveFilters();
+            var reviews = _reviewRepository.GetByFilter(filters).ToList();
+            ReviewList.SetItems(reviews);
         }
 
         public void SetInactive(int id)
@@ -81,6 +112,11 @@ namespace NomadSpot.ViewModel
             var filters = indoorOnly
                 ? IndoorFilter.GetActiveFilters()
                 : OutdoorFilter.GetActiveFilters();
+
+            filters["LocationType"] = indoorOnly ? "Indoor" : "Outdoor";
+
+            if (!filters.ContainsKey("IsActive"))
+                filters["IsActive"] = true;
 
             var locations = _locationRepository.GetByFilter(filters)
                 .OrderBy(l => CalculateDistance(l.Latitude, l.Longitude))

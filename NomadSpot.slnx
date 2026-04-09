@@ -1,4 +1,8 @@
 <Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".env" />
+    <File Path="nomadspot.db" />
+  </Folder>
   <Project Path="NomadSpot.Blazor/NomadSpot.Blazor.csproj" />
   <Project Path="NomadSpot.Model/NomadSpot.Model.csproj" />
   <Project Path="NomadSpot.ViewModel/NomadSpot.ViewModel.csproj" />

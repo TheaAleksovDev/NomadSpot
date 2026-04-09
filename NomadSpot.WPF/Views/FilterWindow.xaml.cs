@@ -48,6 +48,50 @@ namespace NomadSpot.WPF.Views
                     cb.Indeterminate += (s, e) => p.Value = null;
                     control = cb;
                 }
+                else if ((propType == typeof(int) || propType == typeof(double) ||
+                          propType == typeof(int?) || propType == typeof(double?)) && p.IsSlider)
+                {
+                    var sliderPanel = new StackPanel { Orientation = Orientation.Horizontal };
+                    var valueLabel = new TextBlock
+                    {
+                        Text = "(Any)",
+                        Width = 40,
+                        VerticalAlignment = VerticalAlignment.Center,
+                        Margin = new Thickness(8, 0, 0, 0)
+                    };
+                    var slider = new Slider
+                    {
+                        Minimum = p.Min.Value,
+                        Maximum = p.Max.Value,
+                        TickFrequency = 1,
+                        IsSnapToTickEnabled = true,
+                        Width = 180,
+                        Value = p.Min.Value,
+                        HorizontalAlignment = HorizontalAlignment.Left
+                    };
+                    var clearBtn = new Button
+                    {
+                        Content = "Any",
+                        Margin = new Thickness(8, 0, 0, 0),
+                        Padding = new Thickness(6, 2, 6, 2)
+                    };
+                    slider.ValueChanged += (s, e) =>
+                    {
+                        p.Value = slider.Value;
+                        valueLabel.Text = slider.Value.ToString("0");
+                    };
+                    clearBtn.Click += (s, e) =>
+                    {
+                        p.Value = null;
+                        valueLabel.Text = "(Any)";
+                    };
+                    sliderPanel.Children.Add(slider);
+                    sliderPanel.Children.Add(valueLabel);
+                    sliderPanel.Children.Add(clearBtn);
+                    container.Children.Add(sliderPanel);
+                    panel.Children.Add(container);
+                    continue;
+                }
                 else if (propType == typeof(int) || propType == typeof(double) ||
                          propType == typeof(int?) || propType == typeof(double?))
                 {
@@ -60,6 +104,21 @@ namespace NomadSpot.WPF.Views
                             p.Value = null;
                     };
                     control = tb;
+                }
+                else if (propType.IsEnum)
+                {
+                    var combo = new ComboBox { Width = 200, HorizontalAlignment = HorizontalAlignment.Left };
+                    combo.Items.Add("(Any)");
+                    foreach (var name in Enum.GetNames(propType))
+                        combo.Items.Add(name);
+                    combo.SelectedIndex = 0;
+                    combo.SelectionChanged += (s, e) =>
+                    {
+                        p.Value = combo.SelectedIndex <= 0
+                            ? null
+                            : (object)(int)Enum.Parse(propType, combo.SelectedItem.ToString());
+                    };
+                    control = combo;
                 }
                 else if (propType == typeof(DateTime) || propType == typeof(DateTime?))
                 {

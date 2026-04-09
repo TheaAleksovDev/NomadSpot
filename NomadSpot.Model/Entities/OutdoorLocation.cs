@@ -1,7 +1,3 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
 namespace NomadSpot.Model.Entities
 {
     public class OutdoorLocation : Location
@@ -11,5 +7,17 @@ namespace NomadSpot.Model.Entities
         public bool PetFriendly { get; set; }
         public bool HasPublicToilet { get; set; }
         public bool NearShops { get; set; }
+        public OutdoorType OutdoorType { get; set; }
+    }
+
+    public enum OutdoorType
+    {
+        Park,
+        Bench,
+        SportsCourt,
+        Beach,
+        Garden,
+        Plaza,
+        Other
     }
 }

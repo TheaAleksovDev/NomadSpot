@@ -1,4 +1,4 @@
-﻿using Dapper;
+using Dapper;
 using NomadSpot.Model.Entities;
 using NomadSpot.Model.Repositories;
 using Npgsql;
@@ -28,8 +28,11 @@ namespace NomadSpot.Model.Database
         public IEnumerable<Location> GetByFilter(Dictionary<string, object> filters)
         {
             using var conn = new NpgsqlConnection(_connectionString);
-            var sql = new StringBuilder("SELECT * FROM locations WHERE isactive = TRUE");
+            var sql = new StringBuilder("SELECT * FROM locations WHERE 1=1");
             var parameters = new DynamicParameters();
+
+            // pull out LocationType before building shared SQL so we can skip the wrong type query
+            filters.TryGetValue("LocationType", out var locationTypeFilter);
 
             foreach (var filter in filters)
             {
@@ -51,9 +54,16 @@ namespace NomadSpot.Model.Database
                 }
             }
 
-            var indoor = conn.Query<IndoorLocation>(sql.ToString() + " AND locationtype = 'Indoor'", parameters).Cast<Location>();
-            var outdoor = conn.Query<OutdoorLocation>(sql.ToString() + " AND locationtype = 'Outdoor'", parameters).Cast<Location>();
-            return indoor.Concat(outdoor);
+            string baseSql = sql.ToString();
+            var results = new List<Location>();
+
+            if (locationTypeFilter?.ToString() != "Outdoor")
+                results.AddRange(conn.Query<IndoorLocation>(baseSql + " AND locationtype = 'Indoor'", parameters).Cast<Location>());
+
+            if (locationTypeFilter?.ToString() != "Indoor")
+                results.AddRange(conn.Query<OutdoorLocation>(baseSql + " AND locationtype = 'Outdoor'", parameters).Cast<Location>());
+
+            return results;
         }
 
         public Location GetById(int id)
@@ -77,10 +87,10 @@ namespace NomadSpot.Model.Database
             {
                 conn.Execute(@"
                     INSERT INTO locations
-                    (name, address, latitude, longitude, rating, noiselevel, haswifi, haspoweroutlets, lastverified, isactive, locationtype,
+                    (name, address, latitude, longitude, rating, noiselevel, wifistrength, haspoweroutlets, isactive, locationtype,
                      comfortlevel, pricelevel, openinghours, indoortype)
                     VALUES
-                    (@Name, @Address, @Latitude, @Longitude, @Rating, @NoiseLevel, @HasWifi, @HasPowerOutlets, @LastVerified, @IsActive, @LocationType,
+                    (@Name, @Address, @Latitude, @Longitude, @Rating, @NoiseLevel, @WifiStrength, @HasPowerOutlets, @IsActive, @LocationType,
                      @ComfortLevel, @PriceLevel, @OpeningHours, @IndoorType)",
                     indoor);
             }
@@ -88,11 +98,11 @@ namespace NomadSpot.Model.Database
             {
                 conn.Execute(@"
                     INSERT INTO locations
-                    (name, address, latitude, longitude, rating, noiselevel, haswifi, haspoweroutlets, lastverified, isactive, locationtype,
-                     hasbenches, hasshade, petfriendly, haspublictoilet, nearshops)
+                    (name, address, latitude, longitude, rating, noiselevel, wifistrength, haspoweroutlets, isactive, locationtype,
+                     hasbenches, hasshade, petfriendly, haspublictoilet, nearshops, outdoortype)
                     VALUES
-                    (@Name, @Address, @Latitude, @Longitude, @Rating, @NoiseLevel, @HasWifi, @HasPowerOutlets, @LastVerified, @IsActive, @LocationType,
-                     @HasBenches, @HasShade, @PetFriendly, @HasPublicToilet, @NearShops)",
+                    (@Name, @Address, @Latitude, @Longitude, @Rating, @NoiseLevel, @WifiStrength, @HasPowerOutlets, @IsActive, @LocationType,
+                     @HasBenches, @HasShade, @PetFriendly, @HasPublicToilet, @NearShops, @OutdoorType)",
                     outdoor);
             }
         }
@@ -103,9 +113,14 @@ namespace NomadSpot.Model.Database
             conn.Execute(@"
                 UPDATE locations SET
                 name = @Name, address = @Address, rating = @Rating,
-                noiselevel = @NoiseLevel, haswifi = @HasWifi,
-                haspoweroutlets = @HasPowerOutlets, lastverified = @LastVerified
+                noiselevel = @NoiseLevel, wifistrength = @WifiStrength,
+                haspoweroutlets = @HasPowerOutlets
                 WHERE id = @Id", location);
+
+            if (location is IndoorLocation indoor)
+                conn.Execute(@"
+                    UPDATE locations SET comfortlevel = @ComfortLevel, pricelevel = @PriceLevel
+                    WHERE id = @Id", indoor);
         }
 
         public void SetInactive(int id)

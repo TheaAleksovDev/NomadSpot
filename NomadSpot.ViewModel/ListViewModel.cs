@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using System.ComponentModel;
+using System.Linq;
 using System.Reflection;
 
 namespace NomadSpot.ViewModel
@@ -44,6 +44,13 @@ namespace NomadSpot.ViewModel
             Items = null;
             SelectedItem = default;
             VisibleColumns = null;
+        }
+
+        public IEnumerable<string> GetAllColumnNames()
+        {
+            var type = Items?.FirstOrDefault()?.GetType() ?? typeof(T);
+            return type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                       .Select(p => p.Name);
         }
 
         public Dictionary<string, object> GetSelectedItemProperties()

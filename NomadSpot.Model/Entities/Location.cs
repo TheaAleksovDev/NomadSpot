@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace NomadSpot.Model.Entities
 {
@@ -13,11 +11,9 @@ namespace NomadSpot.Model.Entities
         public double Longitude { get; set; }
         public double Rating { get; set; }
         public int NoiseLevel { get; set; }
-        public bool HasWifi { get; set; }
+        public int WifiStrength { get; set; }
         public bool HasPowerOutlets { get; set; }
-        public DateTime LastVerified { get; set; }
         public bool IsActive { get; set; }
         public string LocationType { get; set; }
-        public List<Review> Reviews { get; set; } = new();
     }
 }

@@ -9,3 +9,6 @@ obj/
 *.user
 *.suo
 *.userprefs
+
+# Environment variables (secrets)
+.env

@@ -1,4 +1,4 @@
-﻿@page "/add-location"
+@page "/add-location"
 @rendermode InteractiveServer
 @using NomadSpot.ViewModel
 @using NomadSpot.Model.Entities
@@ -16,13 +16,9 @@
 </div>
 
 <div class="mb-3">
-    <label>Latitude:</label>
-    <input type="number" @bind="Latitude" class="form-control" step="0.0001" />
-</div>
-
-<div class="mb-3">
-    <label>Longitude:</label>
-    <input type="number" @bind="Longitude" class="form-control" step="0.0001" />
+    <label class="form-label">Pick location on the map:</label>
+    <MapPicker Lat="Latitude" Lng="Longitude"
+               OnCoordinatesSelected="coords => { Latitude = coords.Lat; Longitude = coords.Lng; }"/>
 </div>
 
 <div class="mb-3">
@@ -34,12 +30,14 @@
 </div>
 
 <div class="mb-3">
-    <label>Noise Level (1-5):</label>
-    <input type="number" @bind="NoiseLevel" min="1" max="5" class="form-control" />
+    <label>Noise Level: <strong>@NoiseLevel</strong></label>
+    <input type="range" min="1" max="5" step="1" @bind="NoiseLevel" class="form-range" />
 </div>
 
 <div class="mb-3">
-    <input type="checkbox" @bind="HasWifi" /> Has WiFi
+    <label>WiFi Strength: <strong>@WifiStrength</strong></label>
+    <input type="range" min="0" max="5" step="1" @bind="WifiStrength" class="form-range" />
+    <small class="text-muted">0 = No WiFi</small>
 </div>
 
 <div class="mb-3">
@@ -48,6 +46,15 @@
 
 @if (!IsIndoor)
 {
+    <div class="mb-3">
+        <label>Outdoor Type:</label>
+        <select class="form-control" @onchange="e => OutdoorType = Enum.Parse<NomadSpot.Model.Entities.OutdoorType>(e.Value.ToString())">
+            @foreach (var val in Enum.GetValues<NomadSpot.Model.Entities.OutdoorType>())
+            {
+                <option value="@val">@val</option>
+            }
+        </select>
+    </div>
     <div class="mb-3">
         <input type="checkbox" @bind="HasBenches" /> Has Benches
     </div>
@@ -68,12 +75,25 @@
 @if (IsIndoor)
 {
     <div class="mb-3">
-        <label>Comfort Level (1-5):</label>
-        <input type="number" @bind="ComfortLevel" min="1" max="5" class="form-control" />
+        <label>Indoor Type:</label>
+        <select class="form-control" @onchange="e => IndoorType = Enum.Parse<NomadSpot.Model.Entities.IndoorType>(e.Value.ToString())">
+            @foreach (var val in Enum.GetValues<NomadSpot.Model.Entities.IndoorType>())
+            {
+                <option value="@val">@val</option>
+            }
+        </select>
     </div>
     <div class="mb-3">
-        <label>Price Level (1-5):</label>
-        <input type="number" @bind="PriceLevel" min="1" max="5" class="form-control" />
+        <label>Comfort Level: <strong>@ComfortLevel</strong></label>
+        <input type="range" min="1" max="5" step="1" @bind="ComfortLevel" class="form-range" />
+    </div>
+    <div class="mb-3">
+        <label>Price Level: <strong>@PriceLevel</strong></label>
+        <input type="range" min="1" max="5" step="1" @bind="PriceLevel" class="form-range" />
+    </div>
+    <div class="mb-3">
+        <label>Opening Hours:</label>
+        <input type="text" @bind="OpeningHours" class="form-control" placeholder="e.g. 08:00-22:00" />
     </div>
 }
 
@@ -89,19 +109,22 @@
 
     string Name { get; set; }
     string Address { get; set; }
-    double Latitude { get; set; }
-    double Longitude { get; set; }
+    double Latitude { get; set; } = 42.6977;
+    double Longitude { get; set; } = 23.3219;
     bool IsIndoor { get; set; } = true;
     int NoiseLevel { get; set; } = 1;
-    bool HasWifi { get; set; }
+    int WifiStrength { get; set; } = 0;
     bool HasPowerOutlets { get; set; }
     bool HasBenches { get; set; }
     bool HasShade { get; set; }
     bool PetFriendly { get; set; }
     bool HasPublicToilet { get; set; }
     bool NearShops { get; set; }
+    OutdoorType OutdoorType { get; set; } = OutdoorType.Park;
     int ComfortLevel { get; set; } = 1;
     int PriceLevel { get; set; } = 1;
+    string OpeningHours { get; set; }
+    IndoorType IndoorType { get; set; } = IndoorType.Cafe;
     string Message { get; set; }
 
     void OnTypeChanged(ChangeEventArgs e)
@@ -127,13 +150,14 @@
                 Latitude = Latitude,
                 Longitude = Longitude,
                 NoiseLevel = NoiseLevel,
-                HasWifi = HasWifi,
+                WifiStrength = WifiStrength,
                 HasPowerOutlets = HasPowerOutlets,
-                LastVerified = DateTime.Now,
                 IsActive = true,
                 LocationType = "Indoor",
                 ComfortLevel = ComfortLevel,
-                PriceLevel = PriceLevel
+                PriceLevel = PriceLevel,
+                OpeningHours = OpeningHours,
+                IndoorType = IndoorType
             };
         }
         else
@@ -145,16 +169,16 @@
                 Latitude = Latitude,
                 Longitude = Longitude,
                 NoiseLevel = NoiseLevel,
-                HasWifi = HasWifi,
+                WifiStrength = WifiStrength,
                 HasPowerOutlets = HasPowerOutlets,
-                LastVerified = DateTime.Now,
                 IsActive = true,
                 LocationType = "Outdoor",
                 HasBenches = HasBenches,
                 HasShade = HasShade,
                 PetFriendly = PetFriendly,
                 HasPublicToilet = HasPublicToilet,
-                NearShops = NearShops
+                NearShops = NearShops,
+                OutdoorType = OutdoorType
             };
         }
 

@@ -1,4 +1,5 @@
 using NomadSpot.Blazor.Components;
+using NomadSpot.Blazor.Services;
 using NomadSpot.Model.Database;
 using NomadSpot.ViewModel;
 
@@ -9,19 +10,31 @@ namespace NomadSpot.Blazor
     {
         public static void Main(string[] args)
         {
+            LoadEnvFile();
+
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
             builder.Services.AddRazorComponents()
                 .AddInteractiveServerComponents();
 
-            var factory = new RepositoryFactory(
-                DatabaseType.PostgreSQL,
-                "Host=localhost;Database=nomadspot;Username=postgres;Password=tea123");
+            builder.Services.AddSingleton<DatabaseSettingsService>();
 
-            builder.Services.AddScoped<LocationViewModel>(_ => new LocationViewModel(
-                factory.CreateLocationRepository(),
-                factory.CreateReviewRepository()));
+            // Ensure both databases are initialized on startup
+            var pgSettings = new DatabaseSettingsService { DbType = DatabaseType.PostgreSQL };
+            new DatabaseInitializer(pgSettings.DbType, pgSettings.ConnectionString).Initialize();
+
+            var sqliteSettings = new DatabaseSettingsService { DbType = DatabaseType.SQLite };
+            new DatabaseInitializer(sqliteSettings.DbType, sqliteSettings.ConnectionString).Initialize();
+
+            builder.Services.AddScoped<LocationViewModel>(sp =>
+            {
+                var settings = sp.GetRequiredService<DatabaseSettingsService>();
+                var factory = new RepositoryFactory(settings.DbType, settings.ConnectionString);
+                return new LocationViewModel(
+                    factory.CreateLocationRepository(),
+                    factory.CreateReviewRepository());
+            });
 
             var app = builder.Build();
 
@@ -43,6 +56,28 @@ namespace NomadSpot.Blazor
                 .AddInteractiveServerRenderMode();
 
             app.Run();
+        }
+
+        private static void LoadEnvFile()
+        {
+            var dir = new DirectoryInfo(AppContext.BaseDirectory);
+            while (dir != null)
+            {
+                var envFile = Path.Combine(dir.FullName, ".env");
+                if (File.Exists(envFile))
+                {
+                    foreach (var line in File.ReadAllLines(envFile))
+                    {
+                        var trimmed = line.Trim();
+                        if (string.IsNullOrEmpty(trimmed) || trimmed.StartsWith('#')) continue;
+                        var idx = trimmed.IndexOf('=');
+                        if (idx < 0) continue;
+                        Environment.SetEnvironmentVariable(trimmed[..idx].Trim(), trimmed[(idx + 1)..].Trim());
+                    }
+                    break;
+                }
+                dir = dir.Parent;
+            }
         }
     }
 }
