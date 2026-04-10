@@ -16,9 +16,19 @@
 </div>
 
 <div class="mb-3">
-    <label class="form-label">Pick location on the map:</label>
+    <label class="form-label">Location:</label>
+    <div class="d-flex gap-3 mb-2">
+        <div>
+            <label class="form-label mb-0">Latitude</label>
+            <input type="number" step="0.00001" class="form-control" @bind="Latitude" @bind:event="oninput"/>
+        </div>
+        <div>
+            <label class="form-label mb-0">Longitude</label>
+            <input type="number" step="0.00001" class="form-control" @bind="Longitude" @bind:event="oninput"/>
+        </div>
+    </div>
     <MapPicker Lat="Latitude" Lng="Longitude"
-               OnCoordinatesSelected="coords => { Latitude = coords.Lat; Longitude = coords.Lng; }"/>
+               OnCoordinatesSelected="coords => { Latitude = coords.Lat; Longitude = coords.Lng; StateHasChanged(); }"/>
 </div>
 
 <div class="mb-3">

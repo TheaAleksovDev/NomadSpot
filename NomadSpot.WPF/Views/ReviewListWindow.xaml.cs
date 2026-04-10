@@ -88,16 +88,6 @@ namespace NomadSpot.WPF.Views
                 _viewModel.ReviewList.SelectedItem = review;
         }
 
-        private void FilterReviews_Click(object sender, RoutedEventArgs e)
-        {
-            var filterWindow = new FilterWindow(_viewModel.ReviewFilter, () =>
-            {
-                _viewModel.FindReviewsByFilter();
-                RefreshGrid();
-            });
-            filterWindow.Show();
-        }
-
         private void Clear_Click(object sender, RoutedEventArgs e)
         {
             _viewModel.ReviewList.Clear();

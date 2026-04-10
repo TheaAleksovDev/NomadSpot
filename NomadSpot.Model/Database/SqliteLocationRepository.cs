@@ -46,20 +46,27 @@ namespace NomadSpot.Model.Database
 
             foreach (var filter in filters)
             {
-                sql.Append($" AND {filter.Key} = @{filter.Key}");
-                if (filter.Value is string strVal)
+                var key = filter.Key;
+                var colName = key.Replace("_min", "").Replace("_max", "");
+                object value = filter.Value is string strVal
+                    ? (int.TryParse(strVal, out int i) ? i : double.TryParse(strVal, out double d) ? d : bool.TryParse(strVal, out bool b) ? b : (object)strVal)
+                    : filter.Value;
+
+                if (key.EndsWith("_min"))
                 {
-                    if (int.TryParse(strVal, out int intVal))
-                        parameters.Add(filter.Key, intVal);
-                    else if (double.TryParse(strVal, out double dblVal))
-                        parameters.Add(filter.Key, dblVal);
-                    else if (bool.TryParse(strVal, out bool boolVal))
-                        parameters.Add(filter.Key, boolVal);
-                    else
-                        parameters.Add(filter.Key, strVal);
+                    sql.Append($" AND {colName} >= @{key}");
+                    parameters.Add(key, value);
+                }
+                else if (key.EndsWith("_max"))
+                {
+                    sql.Append($" AND {colName} <= @{key}");
+                    parameters.Add(key, value);
                 }
                 else
-                    parameters.Add(filter.Key, filter.Value);
+                {
+                    sql.Append($" AND {colName} = @{key}");
+                    parameters.Add(key, value);
+                }
             }
 
             string baseSql = sql.ToString();

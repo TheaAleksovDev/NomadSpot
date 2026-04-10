@@ -8,6 +8,8 @@ namespace NomadSpot.Model.Entities
         public bool HasPublicToilet { get; set; }
         public bool NearShops { get; set; }
         public OutdoorType OutdoorType { get; set; }
+        public int Cleanliness { get; set; }
+        public int Crowdedness { get; set; }
     }
 
     public enum OutdoorType

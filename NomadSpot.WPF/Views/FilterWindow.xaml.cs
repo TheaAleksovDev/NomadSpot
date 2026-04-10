@@ -51,43 +51,40 @@ namespace NomadSpot.WPF.Views
                 else if ((propType == typeof(int) || propType == typeof(double) ||
                           propType == typeof(int?) || propType == typeof(double?)) && p.IsSlider)
                 {
-                    var sliderPanel = new StackPanel { Orientation = Orientation.Horizontal };
-                    var valueLabel = new TextBlock
+                    var sliderPanel = new StackPanel();
+
+                    // Min row
+                    var minRow = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 2, 0, 2) };
+                    var minLabel = new TextBlock { Text = "Min:", Width = 30, VerticalAlignment = VerticalAlignment.Center };
+                    var minValueLabel = new TextBlock { Text = p.MinValue?.ToString("0") ?? p.Min?.ToString("0"), Width = 25, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(6, 0, 0, 0) };
+                    var minSlider = new Slider { Minimum = p.Min.Value, Maximum = p.Max.Value, TickFrequency = 1, IsSnapToTickEnabled = true, Width = 160, Value = p.MinValue ?? p.Min.Value };
+                    minSlider.ValueChanged += (s, e) => { p.MinValue = minSlider.Value; minValueLabel.Text = minSlider.Value.ToString("0"); };
+                    minRow.Children.Add(minLabel);
+                    minRow.Children.Add(minSlider);
+                    minRow.Children.Add(minValueLabel);
+
+                    // Max row
+                    var maxRow = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 2, 0, 2) };
+                    var maxLabel = new TextBlock { Text = "Max:", Width = 30, VerticalAlignment = VerticalAlignment.Center };
+                    var maxValueLabel = new TextBlock { Text = p.MaxValue?.ToString("0") ?? p.Max?.ToString("0"), Width = 25, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(6, 0, 0, 0) };
+                    var maxSlider = new Slider { Minimum = p.Min.Value, Maximum = p.Max.Value, TickFrequency = 1, IsSnapToTickEnabled = true, Width = 160, Value = p.MaxValue ?? p.Max.Value };
+                    maxSlider.ValueChanged += (s, e) => { p.MaxValue = maxSlider.Value; maxValueLabel.Text = maxSlider.Value.ToString("0"); };
+                    maxRow.Children.Add(maxLabel);
+                    maxRow.Children.Add(maxSlider);
+                    maxRow.Children.Add(maxValueLabel);
+
+                    var resetBtn = new Button { Content = "Reset", Padding = new Thickness(6, 2, 6, 2), HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 4, 0, 0) };
+                    resetBtn.Click += (s, e) =>
                     {
-                        Text = "(Any)",
-                        Width = 40,
-                        VerticalAlignment = VerticalAlignment.Center,
-                        Margin = new Thickness(8, 0, 0, 0)
+                        p.MinValue = p.Min;
+                        p.MaxValue = p.Max;
+                        minSlider.Value = p.Min.Value;
+                        maxSlider.Value = p.Max.Value;
                     };
-                    var slider = new Slider
-                    {
-                        Minimum = p.Min.Value,
-                        Maximum = p.Max.Value,
-                        TickFrequency = 1,
-                        IsSnapToTickEnabled = true,
-                        Width = 180,
-                        Value = p.Min.Value,
-                        HorizontalAlignment = HorizontalAlignment.Left
-                    };
-                    var clearBtn = new Button
-                    {
-                        Content = "Any",
-                        Margin = new Thickness(8, 0, 0, 0),
-                        Padding = new Thickness(6, 2, 6, 2)
-                    };
-                    slider.ValueChanged += (s, e) =>
-                    {
-                        p.Value = slider.Value;
-                        valueLabel.Text = slider.Value.ToString("0");
-                    };
-                    clearBtn.Click += (s, e) =>
-                    {
-                        p.Value = null;
-                        valueLabel.Text = "(Any)";
-                    };
-                    sliderPanel.Children.Add(slider);
-                    sliderPanel.Children.Add(valueLabel);
-                    sliderPanel.Children.Add(clearBtn);
+
+                    sliderPanel.Children.Add(minRow);
+                    sliderPanel.Children.Add(maxRow);
+                    sliderPanel.Children.Add(resetBtn);
                     container.Children.Add(sliderPanel);
                     panel.Children.Add(container);
                     continue;

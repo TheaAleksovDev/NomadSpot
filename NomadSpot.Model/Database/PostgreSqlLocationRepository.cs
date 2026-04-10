@@ -31,26 +31,30 @@ namespace NomadSpot.Model.Database
             var sql = new StringBuilder("SELECT * FROM locations WHERE 1=1");
             var parameters = new DynamicParameters();
 
-            // pull out LocationType before building shared SQL so we can skip the wrong type query
             filters.TryGetValue("LocationType", out var locationTypeFilter);
 
             foreach (var filter in filters)
             {
-                sql.Append($" AND {filter.Key.ToLower()} = @{filter.Key}");
-                if (filter.Value is string strVal)
+                var key = filter.Key;
+                var colName = key.Replace("_min", "").Replace("_max", "").ToLower();
+                object value = filter.Value is string strVal
+                    ? (int.TryParse(strVal, out int i) ? i : double.TryParse(strVal, out double d) ? d : bool.TryParse(strVal, out bool b) ? b : (object)strVal)
+                    : filter.Value;
+
+                if (key.EndsWith("_min"))
                 {
-                    if (int.TryParse(strVal, out int intVal))
-                        parameters.Add(filter.Key, intVal);
-                    else if (double.TryParse(strVal, out double dblVal))
-                        parameters.Add(filter.Key, dblVal);
-                    else if (bool.TryParse(strVal, out bool boolVal))
-                        parameters.Add(filter.Key, boolVal);
-                    else
-                        parameters.Add(filter.Key, strVal);
+                    sql.Append($" AND {colName} >= @{key}");
+                    parameters.Add(key, value);
+                }
+                else if (key.EndsWith("_max"))
+                {
+                    sql.Append($" AND {colName} <= @{key}");
+                    parameters.Add(key, value);
                 }
                 else
                 {
-                    parameters.Add(filter.Key, filter.Value);
+                    sql.Append($" AND {colName} = @{key}");
+                    parameters.Add(key, value);
                 }
             }
 

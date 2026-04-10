@@ -8,9 +8,19 @@
 <h3>Find Locations</h3>
 
 <div class="mb-3">
-    <label class="form-label">Pick your location on the map:</label>
+    <label class="form-label">Your location:</label>
+    <div class="d-flex gap-3 mb-2">
+        <div>
+            <label class="form-label mb-0">Latitude</label>
+            <input type="number" step="0.00001" class="form-control" @bind="Latitude" @bind:event="oninput"/>
+        </div>
+        <div>
+            <label class="form-label mb-0">Longitude</label>
+            <input type="number" step="0.00001" class="form-control" @bind="Longitude" @bind:event="oninput"/>
+        </div>
+    </div>
     <MapPicker Lat="Latitude" Lng="Longitude"
-               OnCoordinatesSelected="coords => { Latitude = coords.Lat; Longitude = coords.Lng; }"/>
+               OnCoordinatesSelected="coords => { Latitude = coords.Lat; Longitude = coords.Lng; StateHasChanged(); }"/>
 </div>
 
 <div class="mb-3">
@@ -54,16 +64,23 @@
                 }
                 else if (filter.IsSlider)
                 {
-                    <div class="d-flex align-items-center gap-2">
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <span class="text-muted small">Min:</span>
                         <input type="range"
                                min="@filter.Min" max="@filter.Max" step="1"
-                               value="@(filter.Value ?? filter.Min)"
-                               class="form-range"
-                               style="width:180px"
-                               @onchange="e => filter.Value = e.Value?.ToString()"/>
-                        <span>@(filter.Value ?? "(Any)")</span>
+                               value="@filter.MinValue"
+                               class="form-range" style="width:140px"
+                               @onchange="e => filter.MinValue = double.Parse(e.Value.ToString())"/>
+                        <span>@filter.MinValue</span>
+                        <span class="text-muted small ms-2">Max:</span>
+                        <input type="range"
+                               min="@filter.Min" max="@filter.Max" step="1"
+                               value="@filter.MaxValue"
+                               class="form-range" style="width:140px"
+                               @onchange="e => filter.MaxValue = double.Parse(e.Value.ToString())"/>
+                        <span>@filter.MaxValue</span>
                         <button class="btn btn-sm btn-outline-secondary"
-                                @onclick="() => filter.Value = null">Any</button>
+                                @onclick="() => { filter.MinValue = filter.Min; filter.MaxValue = filter.Max; }">Reset</button>
                     </div>
                 }
                 else if (filter.PropertyType == typeof(int) || filter.PropertyType == typeof(int?) ||
@@ -171,34 +188,38 @@
         }
         else
         {
-            @foreach (var review in ViewModel.ReviewList.Items)
-            {
-                <div class="border rounded p-3 mb-2">
-                    <div class="d-flex justify-content-between">
-                        <strong>@review.Author</strong>
-                        <small class="text-muted">@review.Date.ToString("dd MMM yyyy")</small>
-                    </div>
-                    <div class="mt-1">
-                        <span class="me-3">Rating: @review.Rating/5</span>
-                        <span class="me-3">Noise: @review.NoiseLevel/5</span>
-                        <span class="me-3">WiFi: @review.WifiStrength/5</span>
-                        @if (ReviewsLocation.LocationType == "Indoor")
+            <div class="mb-2">
+                <strong>Columns: </strong>
+                @foreach (var col in ReviewAllColumns)
+                {
+                    <label class="me-3">
+                        <input type="checkbox" checked="@ReviewSelectedColumns.Contains(col)"
+                               @onchange="e => ToggleReviewColumn(col, (bool)e.Value)"/> @col
+                    </label>
+                }
+            </div>
+
+            <table class="table table-striped table-sm">
+                <thead>
+                    <tr>
+                        @foreach (var col in ReviewSelectedColumns)
                         {
-                            <span class="me-3">Comfort: @review.ComfortLevel/5</span>
-                            <span>Price: @review.PriceLevel/5</span>
+                            <th>@col</th>
                         }
-                        else
-                        {
-                            <span class="me-3">Cleanliness: @review.Cleanliness/5</span>
-                            <span>Crowdedness: @review.Crowdedness/5</span>
-                        }
-                    </div>
-                    @if (!string.IsNullOrWhiteSpace(review.Comment))
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var review in ViewModel.ReviewList.Items)
                     {
-                        <p class="mt-2 mb-0 text-secondary">@review.Comment</p>
+                        <tr>
+                            @foreach (var col in ReviewSelectedColumns)
+                            {
+                                <td>@review.GetType().GetProperty(col)?.GetValue(review)</td>
+                            }
+                        </tr>
                     }
-                </div>
-            }
+                </tbody>
+            </table>
         }
     </div>
 }
@@ -290,6 +311,16 @@
     List<string> AllColumns => ViewModel.LocationList.GetAllColumnNames().ToList();
     List<string> SelectedColumns = new() { "Name", "Address", "LocationType", "Rating" };
 
+    private static readonly string[] IndoorOnlyColumns = { "ComfortLevel", "PriceLevel" };
+    private static readonly string[] OutdoorOnlyColumns = { "Cleanliness", "Crowdedness" };
+
+    List<string> ReviewAllColumns => ViewModel.ReviewList.GetAllColumnNames()
+        .Where(c => ReviewsLocation?.LocationType == "Indoor"
+            ? !OutdoorOnlyColumns.Contains(c)
+            : !IndoorOnlyColumns.Contains(c))
+        .ToList();
+    List<string> ReviewSelectedColumns = new() { "Author", "Rating", "NoiseLevel", "WifiStrength", "Comment", "Date" };
+
     void FindLocations()
     {
         ViewModel.UserLatitude = Latitude;
@@ -347,8 +378,18 @@
     {
         ReviewsLocation = loc;
         ViewModel.LoadReviews(loc.Id);
+        var excluded = loc.LocationType == "Indoor" ? OutdoorOnlyColumns : IndoorOnlyColumns;
+        ReviewSelectedColumns = ReviewSelectedColumns.Where(c => !excluded.Contains(c)).ToList();
+        ViewModel.ReviewList.SetColumns(ReviewSelectedColumns);
         ShowReviews = true;
         ShowReview = false;
+    }
+
+    void ToggleReviewColumn(string col, bool add)
+    {
+        if (add && !ReviewSelectedColumns.Contains(col)) ReviewSelectedColumns.Add(col);
+        else if (!add) ReviewSelectedColumns.Remove(col);
+        ViewModel.ReviewList.SetColumns(ReviewSelectedColumns);
     }
 
     void OpenReview(Location loc)

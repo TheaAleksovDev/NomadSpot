@@ -38,7 +38,6 @@ namespace NomadSpot.ViewModel
         public ListViewModel<Review> ReviewList { get; } = new ListViewModel<Review>();
         public FilterViewModel<IndoorLocation> IndoorFilter { get; } = new FilterViewModel<IndoorLocation>();
         public FilterViewModel<OutdoorLocation> OutdoorFilter { get; } = new FilterViewModel<OutdoorLocation>();
-        public FilterViewModel<Review> ReviewFilter { get; } = new FilterViewModel<Review>();
 
         public LocationViewModel(ILocationRepository locationRepository, IReviewRepository reviewRepository)
         {
@@ -82,16 +81,19 @@ namespace NomadSpot.ViewModel
                     if (priceReviews.Any())
                         indoor.PriceLevel = (int)Math.Round(priceReviews.Average(r => r.PriceLevel));
                 }
+                else if (location is Model.Entities.OutdoorLocation outdoor)
+                {
+                    var cleanlinessReviews = reviews.Where(r => r.Cleanliness > 0).ToList();
+                    if (cleanlinessReviews.Any())
+                        outdoor.Cleanliness = (int)Math.Round(cleanlinessReviews.Average(r => r.Cleanliness));
+
+                    var crowdednessReviews = reviews.Where(r => r.Crowdedness > 0).ToList();
+                    if (crowdednessReviews.Any())
+                        outdoor.Crowdedness = (int)Math.Round(crowdednessReviews.Average(r => r.Crowdedness));
+                }
 
                 _locationRepository.Update(location);
             }
-        }
-
-        public void FindReviewsByFilter()
-        {
-            var filters = ReviewFilter.GetActiveFilters();
-            var reviews = _reviewRepository.GetByFilter(filters).ToList();
-            ReviewList.SetItems(reviews);
         }
 
         public void SetInactive(int id)
