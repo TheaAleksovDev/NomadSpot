@@ -1,14 +1,7 @@
-# Visual Studio cache
 .vs/
-
-# Build output
 bin/
 obj/
-
-# User-specific files
 *.user
 *.suo
 *.userprefs
-
-# Environment variables (secrets)
 .env
