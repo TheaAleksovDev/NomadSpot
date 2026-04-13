@@ -24,7 +24,7 @@ namespace NomadSpot.ViewModel
         {
             "Id", "Name", "Address", "Latitude", "Longitude",
             "LocationType", "IsActive", "OpeningHours", "LocationId",
-            "Author", "Comment", "Date"
+            "Author", "Comment"
         };
 
         private static readonly Dictionary<string, (double Min, double Max)> _sliderRanges = new()

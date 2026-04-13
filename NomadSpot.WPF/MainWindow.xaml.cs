@@ -16,9 +16,6 @@ namespace NomadSpot.WPF
             var dbType = DatabaseType.PostgreSQL;
             var connStr = Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING")!;
 
-            var initializer = new DatabaseInitializer(dbType, connStr);
-            initializer.Initialize();
-
             var factory = new RepositoryFactory(dbType, connStr);
 
             _viewModel = new LocationViewModel(

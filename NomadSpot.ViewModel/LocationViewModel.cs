@@ -38,6 +38,7 @@ namespace NomadSpot.ViewModel
         public ListViewModel<Review> ReviewList { get; } = new ListViewModel<Review>();
         public FilterViewModel<IndoorLocation> IndoorFilter { get; } = new FilterViewModel<IndoorLocation>();
         public FilterViewModel<OutdoorLocation> OutdoorFilter { get; } = new FilterViewModel<OutdoorLocation>();
+        public FilterViewModel<Review> ReviewFilter { get; } = new FilterViewModel<Review>();
 
         public LocationViewModel(ILocationRepository locationRepository, IReviewRepository reviewRepository)
         {
@@ -50,6 +51,11 @@ namespace NomadSpot.ViewModel
             var reviews = _reviewRepository.GetByLocationId(locationId).ToList();
             ReviewList.SetItems(reviews);
             ReviewList.SetColumns(new[] { "Author", "Rating", "Date", "Comment" });
+        }
+
+        public IEnumerable<Review> LoadReviewsWithFilter(Dictionary<string, object> filters)
+        {
+            return _reviewRepository.GetByFilter(filters);
         }
 
         public void AddReview(Review review)

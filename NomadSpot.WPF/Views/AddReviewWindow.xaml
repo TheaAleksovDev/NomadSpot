@@ -25,7 +25,6 @@
                     IsSnapToTickEnabled="True" Value="0" Margin="0,0,0,10"
                     ValueChanged="WifiStrengthBox_ValueChanged"/>
 
-            <!-- Indoor-specific -->
             <StackPanel x:Name="IndoorPanel">
                 <TextBlock x:Name="ComfortLevelLabel" Text="Comfort Level: 1"/>
                 <Slider x:Name="ComfortLevelBox" Minimum="1" Maximum="5" TickFrequency="1"
@@ -38,7 +37,6 @@
                         ValueChanged="PriceLevelBox_ValueChanged"/>
             </StackPanel>
 
-            <!-- Outdoor-specific -->
             <StackPanel x:Name="OutdoorPanel" Visibility="Collapsed">
                 <TextBlock x:Name="CleanlinessLabel" Text="Cleanliness: 1"/>
                 <Slider x:Name="CleanlinessBox" Minimum="1" Maximum="5" TickFrequency="1"

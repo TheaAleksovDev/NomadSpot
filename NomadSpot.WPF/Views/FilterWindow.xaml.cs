@@ -21,9 +21,6 @@ namespace NomadSpot.WPF.Views
 
         private void BuildFilterControls()
         {
-            FiltersPanel.ItemsSource = null;
-            FiltersPanel.ItemsSource = _filterViewModel.FilterProperties;
-
             var panel = new StackPanel();
 
             foreach (var prop in _filterViewModel.FilterProperties)

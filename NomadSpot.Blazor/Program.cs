@@ -14,13 +14,11 @@ namespace NomadSpot.Blazor
 
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
             builder.Services.AddRazorComponents()
                 .AddInteractiveServerComponents();
 
             builder.Services.AddSingleton<DatabaseSettingsService>();
 
-            // Ensure both databases are initialized on startup
             var pgSettings = new DatabaseSettingsService { DbType = DatabaseType.PostgreSQL };
             new DatabaseInitializer(pgSettings.DbType, pgSettings.ConnectionString).Initialize();
 
@@ -38,7 +36,6 @@ namespace NomadSpot.Blazor
 
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
             if (!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/Error");

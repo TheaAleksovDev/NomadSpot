@@ -180,8 +180,48 @@
     <div class="card mt-3 p-3">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="mb-0">Reviews for @ReviewsLocation.Name</h5>
-            <button class="btn btn-sm btn-outline-secondary" @onclick="() => ShowReviews = false">&times; Close</button>
+            <div>
+                <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => ShowReviewFilters = !ShowReviewFilters">Filter</button>
+                <button class="btn btn-sm btn-outline-secondary" @onclick="() => { ShowReviews = false; ShowReviewFilters = false; ViewModel.ReviewFilter.ClearFilters(); }">&times; Close</button>
+            </div>
         </div>
+
+        @if (ShowReviewFilters)
+        {
+            <div class="card p-2 mb-3">
+                @foreach (var filter in ViewModel.ReviewFilter.FilterProperties)
+                {
+                    <div class="mb-2">
+                        <label>@filter.DisplayName</label>
+                        @if (filter.PropertyType == typeof(bool) || filter.PropertyType == typeof(bool?))
+                        {
+                            <input type="checkbox" @onchange="e => filter.Value = e.Value" class="ms-2"/>
+                        }
+                        else if (filter.IsSlider)
+                        {
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <span class="text-muted small">Min:</span>
+                                <input type="range" min="@filter.Min" max="@filter.Max" step="1"
+                                       value="@filter.MinValue" class="form-range" style="width:120px"
+                                       @onchange="e => filter.MinValue = double.Parse(e.Value.ToString())"/>
+                                <span>@filter.MinValue</span>
+                                <span class="text-muted small ms-2">Max:</span>
+                                <input type="range" min="@filter.Min" max="@filter.Max" step="1"
+                                       value="@filter.MaxValue" class="form-range" style="width:120px"
+                                       @onchange="e => filter.MaxValue = double.Parse(e.Value.ToString())"/>
+                                <span>@filter.MaxValue</span>
+                            </div>
+                        }
+                        else
+                        {
+                            <input type="text" class="form-control" @onchange="e => filter.Value = e.Value?.ToString()"/>
+                        }
+                    </div>
+                }
+                <button class="btn btn-sm btn-outline-secondary" @onclick="() => ViewModel.ReviewFilter.ClearFilters()">Clear</button>
+            </div>
+        }
+
         @if (!ViewModel.ReviewList.Items.Any())
         {
             <p class="text-muted">No reviews yet.</p>
@@ -209,7 +249,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var review in ViewModel.ReviewList.Items)
+                    @foreach (var review in GetFilteredReviews())
                     {
                         <tr>
                             @foreach (var col in ReviewSelectedColumns)
@@ -293,6 +333,7 @@
     bool ShowFilters { get; set; }
     bool ShowReview { get; set; }
     bool ShowReviews { get; set; }
+    bool ShowReviewFilters { get; set; }
     Location ReviewsLocation { get; set; }
     string ReviewAuthor { get; set; }
     int ReviewRating { get; set; } = 5;
@@ -363,7 +404,9 @@
         SelectedLocation = null;
         ShowReview = false;
         ShowReviews = false;
+        ShowReviewFilters = false;
         ReviewsLocation = null;
+        ViewModel.ReviewFilter.ClearFilters();
         Message = null;
     }
 
@@ -383,6 +426,26 @@
         ViewModel.ReviewList.SetColumns(ReviewSelectedColumns);
         ShowReviews = true;
         ShowReview = false;
+    }
+
+    IEnumerable<Review> GetFilteredReviews()
+    {
+        var reviews = ViewModel.ReviewList.Items ?? Enumerable.Empty<Review>();
+        var filters = ViewModel.ReviewFilter.GetActiveFilters();
+        foreach (var f in filters)
+        {
+            var key = f.Key;
+            var colName = key.Replace("_min", "").Replace("_max", "");
+            var prop = typeof(Review).GetProperty(colName, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+            if (prop == null) continue;
+            if (key.EndsWith("_min"))
+                reviews = reviews.Where(r => Convert.ToDouble(prop.GetValue(r)) >= Convert.ToDouble(f.Value));
+            else if (key.EndsWith("_max"))
+                reviews = reviews.Where(r => Convert.ToDouble(prop.GetValue(r)) <= Convert.ToDouble(f.Value));
+            else
+                reviews = reviews.Where(r => prop.GetValue(r)?.ToString() == f.Value?.ToString());
+        }
+        return reviews;
     }
 
     void ToggleReviewColumn(string col, bool add)

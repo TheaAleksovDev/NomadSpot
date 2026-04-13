@@ -85,7 +85,37 @@ namespace NomadSpot.WPF.Views
         private void ReviewsGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (ReviewsGrid.SelectedItem is Review review)
+            {
                 _viewModel.ReviewList.SelectedItem = review;
+                ShowDetail(review);
+            }
+        }
+
+        private void ShowDetail(Review review)
+        {
+            var props = review.GetType()
+                .GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)
+                .Select(p => new System.Collections.Generic.KeyValuePair<string, object>(p.Name, p.GetValue(review) ?? "-"))
+                .ToList();
+            DetailItems.ItemsSource = props;
+            DetailPanel.Visibility = Visibility.Visible;
+        }
+
+        private void CloseDetail_Click(object sender, RoutedEventArgs e)
+        {
+            DetailPanel.Visibility = Visibility.Collapsed;
+        }
+
+        private void Filter_Click(object sender, RoutedEventArgs e)
+        {
+            Action onSearch = () =>
+            {
+                var filters = _viewModel.ReviewFilter.GetActiveFilters();
+                _viewModel.ReviewList.SetItems(_viewModel.LoadReviewsWithFilter(filters));
+                RefreshGrid();
+            };
+            var filterWindow = new FilterWindow(_viewModel.ReviewFilter, onSearch);
+            filterWindow.Show();
         }
 
         private void Clear_Click(object sender, RoutedEventArgs e)
