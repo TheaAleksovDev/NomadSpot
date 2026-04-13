@@ -44,7 +44,7 @@
 {
     <div class="card mt-3 p-3">
         <h5>Filters</h5>
-        @foreach (var filter in GetActiveFilters())
+        @foreach (var filter in GetFilters())
         {
             <div class="mb-2">
                 <label>@filter.DisplayName</label>
@@ -368,6 +368,7 @@
         ViewModel.UserLongitude = Longitude;
         ViewModel.ResultCount = ResultCount;
         ViewModel.FindClosestLocations(IsIndoor);
+        SelectedColumns = new List<string> { "Name", "Address", "LocationType", "Rating" };
         ViewModel.LocationList.SetColumns(SelectedColumns);
         LocationResults = ViewModel.LocationList.Items;
         ShowFilters = false;
@@ -375,7 +376,7 @@
 
     void OpenFilters() => ShowFilters = !ShowFilters;
 
-    List<FilterProperty> GetActiveFilters() =>
+    List<FilterProperty> GetFilters() =>
         IsIndoor ? ViewModel.IndoorFilter.FilterProperties : ViewModel.OutdoorFilter.FilterProperties;
 
     void ApplyFilters()

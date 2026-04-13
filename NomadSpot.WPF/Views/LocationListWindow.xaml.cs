@@ -12,6 +12,8 @@ namespace NomadSpot.WPF.Views
     {
         private readonly LocationViewModel _viewModel;
         private readonly string[] _defaultColumns = { "Name", "Address", "Rating", "LocationType" };
+        private static readonly string[] IndoorOnlyColumns = { "ComfortLevel", "PriceLevel", "OpeningHours", "IndoorType" };
+        private static readonly string[] OutdoorOnlyColumns = { "HasBenches", "HasShade", "PetFriendly", "HasPublicToilet", "NearShops", "OutdoorType" };
 
         public LocationListWindow(LocationViewModel viewModel)
         {
@@ -33,7 +35,11 @@ namespace NomadSpot.WPF.Views
                 Margin = new Thickness(0, 0, 10, 0)
             });
 
-            foreach (var col in _viewModel.LocationList.GetAllColumnNames())
+            var excluded = _viewModel.LastSearchWasIndoor ? OutdoorOnlyColumns : IndoorOnlyColumns;
+            var allColumns = _viewModel.LocationList.GetAllColumnNames()
+                .Where(c => !excluded.Contains(c));
+
+            foreach (var col in allColumns)
             {
                 var cb = new CheckBox
                 {
