@@ -44,7 +44,7 @@
 {
     <div class="card mt-3 p-3">
         <h5>Filters</h5>
-        @foreach (var filter in GetFilters())
+        @foreach (var filter in GetActiveFilters())
         {
             <div class="mb-2">
                 <label>@filter.DisplayName</label>
@@ -376,7 +376,7 @@
 
     void OpenFilters() => ShowFilters = !ShowFilters;
 
-    List<FilterProperty> GetFilters() =>
+    List<FilterProperty> GetActiveFilters() =>
         IsIndoor ? ViewModel.IndoorFilter.FilterProperties : ViewModel.OutdoorFilter.FilterProperties;
 
     void ApplyFilters()
