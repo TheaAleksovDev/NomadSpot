@@ -9,16 +9,15 @@ using System.Windows.Input;
 
 namespace NomadSpot.ViewModel
 {
-    public class LocationViewModel : BaseViewModel
+    public class LocationViewModel : BaseViewModel, ILocationViewModel
     {
         private readonly ILocationRepository _locationRepository;
         private readonly IReviewRepository _reviewRepository;
 
-        // ── Search form ──────────────────────────────────────────────────────────
         private double _userLatitude  = 42.6977;
         private double _userLongitude = 23.3219;
         private int _resultCount = 3;
-        private int _searchTypeIndex = 0; // 0 = Indoor, 1 = Outdoor
+        private int _searchTypeIndex = 0;
 
         public double UserLatitude   { get => _userLatitude;   set => SetProperty(ref _userLatitude, value); }
         public double UserLongitude  { get => _userLongitude;  set => SetProperty(ref _userLongitude, value); }
@@ -38,20 +37,17 @@ namespace NomadSpot.ViewModel
         public IFilterViewModel CurrentFilter =>
             IsIndoorSearch ? IndoorFilter : (IFilterViewModel)OutdoorFilter;
 
-        // ── Lists ────────────────────────────────────────────────────────────────
         public ListViewModel<Location> LocationList { get; } = new ListViewModel<Location>();
         public ListViewModel<Review>   ReviewList   { get; } = new ListViewModel<Review>();
         public FilterViewModel<IndoorLocation>  IndoorFilter  { get; } = new FilterViewModel<IndoorLocation>();
         public FilterViewModel<OutdoorLocation> OutdoorFilter { get; } = new FilterViewModel<OutdoorLocation>();
         public FilterViewModel<Review>          ReviewFilter  { get; } = new FilterViewModel<Review>();
 
-        // ── Computed from selected location ──────────────────────────────────────
         public bool   HasSelectedLocation      => LocationList.SelectedItem != null;
         public bool   IsSelectedLocationIndoor => LocationList.SelectedItem?.LocationType == "Indoor";
         public bool   IsSelectedLocationOutdoor=> LocationList.SelectedItem?.LocationType == "Outdoor";
         public string ReviewListTitle          => $"Reviews for: {LocationList.SelectedItem?.Name ?? ""}";
 
-        // ── Selected location details ─────────────────────────────────────────────
         private List<KeyValuePair<string, object>> _selectedLocationDetails;
         public List<KeyValuePair<string, object>> SelectedLocationDetails
         {
@@ -68,7 +64,6 @@ namespace NomadSpot.ViewModel
                     .ToList();
         }
 
-        // ── Selected review ───────────────────────────────────────────────────────
         private Review _selectedReview;
         public Review SelectedReview
         {
@@ -106,12 +101,11 @@ namespace NomadSpot.ViewModel
                 : !ReviewIndoorOnlyColumns.Contains(c))
             .ToList();
 
-        // ── Add Location form properties ─────────────────────────────────────────
         private string _newName = "";
         private string _newAddress = "";
         private double _newLatitude;
         private double _newLongitude;
-        private int    _newLocationTypeIndex = 0; // 0 = Indoor, 1 = Outdoor
+        private int    _newLocationTypeIndex = 0;
         private int    _newNoiseLevel = 1;
         private int    _newWifiStrength = 0;
         private bool   _newHasPowerOutlets;
@@ -186,7 +180,6 @@ namespace NomadSpot.ViewModel
             set => NewOutdoorTypeIndex = Array.IndexOf(OutdoorTypes, value.ToString());
         }
 
-        // ── Add Review form properties ────────────────────────────────────────────
         private string _newReviewAuthor = "";
         private string _newReviewComment = "";
         private int    _newReviewRating = 1;
@@ -211,18 +204,15 @@ namespace NomadSpot.ViewModel
         public int    NewReviewCleanliness  { get => _newReviewCleanliness;  set => SetProperty(ref _newReviewCleanliness, value); }
         public int    NewReviewCrowdedness  { get => _newReviewCrowdedness;  set => SetProperty(ref _newReviewCrowdedness, value); }
 
-        // ── Status message ───────────────────────────────────────────────────────
         private string _statusMessage;
         public string StatusMessage { get => _statusMessage; set => SetProperty(ref _statusMessage, value); }
 
-        // ── Column selection ──────────────────────────────────────────────────────
         private static readonly string[] DefaultLocationColumns = { "Name", "Address", "LocationType", "Rating" };
         private static readonly string[] DefaultReviewColumns   = { "Author", "Rating", "NoiseLevel", "WifiStrength", "Comment", "Date" };
 
         public ObservableCollection<ColumnOption> LocationColumns { get; private set; } = new();
         public ObservableCollection<ColumnOption> ReviewColumns   { get; private set; } = new();
 
-        // For Blazor compatibility
         public List<string> SelectedLocationColumns { get; private set; } = new(DefaultLocationColumns);
         public List<string> SelectedReviewColumns   { get; private set; } = new(DefaultReviewColumns);
 
@@ -242,7 +232,6 @@ namespace NomadSpot.ViewModel
 
         public void SelectLocation(Location loc) => LocationList.SelectedItem = loc;
 
-        // ── Navigation events ────────────────────────────────────────────────────
         public event EventHandler LocationsFound;
         public event EventHandler OpenAddLocationRequested;
         public event EventHandler OpenAddReviewRequested;
@@ -252,7 +241,6 @@ namespace NomadSpot.ViewModel
         public event Action<IFilterViewModel> OpenFilterRequested;
         public event Action<IFilterViewModel> OpenReviewFilterRequested;
 
-        // ── Commands ─────────────────────────────────────────────────────────────
         public ICommand FindLocationsCommand    { get; }
         public ICommand FindWithFiltersCommand  { get; }
         public ICommand OpenAddLocationCommand  { get; }
@@ -334,7 +322,6 @@ namespace NomadSpot.ViewModel
             };
         }
 
-        // ── Command implementations ───────────────────────────────────────────────
         private void ExecuteFindLocations()
         {
             IndoorFilter.ClearFilters();
@@ -461,10 +448,11 @@ namespace NomadSpot.ViewModel
         private void ExecuteFilterReviews()
         {
             var filters = ReviewFilter.GetActiveFilters();
-            ReviewList.SetItems(LoadReviewsWithFilter(filters));
+            if (LocationList.SelectedItem != null)
+                filters["LocationId"] = LocationList.SelectedItem.Id;
+            ReviewList.SetItems(_reviewRepository.GetByFilter(filters));
         }
 
-        // ── Form helpers ──────────────────────────────────────────────────────────
         public void ResetNewReviewForm()
         {
             NewReviewAuthor       = "";
@@ -478,7 +466,6 @@ namespace NomadSpot.ViewModel
             NewReviewComment      = "";
         }
 
-        // ── Column builders ───────────────────────────────────────────────────────
         private void RebuildLocationColumns(bool indoorOnly)
         {
             var excluded = indoorOnly ? LocationOutdoorOnlyColumns : LocationIndoorOnlyColumns;
@@ -502,7 +489,6 @@ namespace NomadSpot.ViewModel
             OnPropertyChanged(nameof(ReviewColumns));
         }
 
-        // ── Domain methods ────────────────────────────────────────────────────────
         public void LoadReviews(int locationId)
         {
             var reviews = _reviewRepository.GetByLocationId(locationId).ToList();

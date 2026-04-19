@@ -1,0 +1,60 @@
+@using NomadSpot.ViewModel
+@using System.Reflection
+
+@foreach (var filter in FilterViewModel.FilterProperties)
+{
+    <div class="mb-2">
+        <label>@filter.DisplayName</label>
+        @if (filter.PropertyType == typeof(bool) || filter.PropertyType == typeof(bool?))
+        {
+            <input type="checkbox" class="ms-2"
+                   @bind:get="(bool)(filter.Value ?? false)"
+                   @bind:set="v => filter.Value = v"/>
+        }
+        else if (filter.PropertyType.IsEnum)
+        {
+            <select class="form-select"
+                    @bind:get="filter.Value?.ToString() ?? string.Empty"
+                    @bind:set="v => filter.Value = string.IsNullOrEmpty(v) ? null : (object)(int)Enum.Parse(filter.PropertyType, v)">
+                <option value="">(Any)</option>
+                @foreach (var name in filter.EnumValues)
+                {
+                    <option value="@name">@name</option>
+                }
+            </select>
+        }
+        else if (filter.IsSlider)
+        {
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <span class="text-muted small">Min:</span>
+                <input type="range" min="@filter.Min" max="@filter.Max" step="1"
+                       class="form-range" style="width:140px"
+                       @bind="filter.MinValue" @bind:event="oninput"/>
+                <span>@filter.MinValue</span>
+                <span class="text-muted small ms-2">Max:</span>
+                <input type="range" min="@filter.Min" max="@filter.Max" step="1"
+                       class="form-range" style="width:140px"
+                       @bind="filter.MaxValue" @bind:event="oninput"/>
+                <span>@filter.MaxValue</span>
+                <button class="btn btn-sm btn-outline-secondary"
+                        @onclick="() => { filter.MinValue = filter.Min; filter.MaxValue = filter.Max; }">Reset</button>
+            </div>
+        }
+        else if (filter.PropertyType == typeof(DateTime) || filter.PropertyType == typeof(DateTime?))
+        {
+            <input type="date" class="form-control"
+                   @bind:get="filter.Value is DateTime ? (DateTime)filter.Value : default(DateTime)"
+                   @bind:set="v => filter.Value = v"/>
+        }
+        else
+        {
+            <input type="text" class="form-control"
+                   @bind:get="filter.Value?.ToString() ?? string.Empty"
+                   @bind:set="v => filter.Value = string.IsNullOrEmpty(v) ? null : v"/>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public IFilterViewModel FilterViewModel { get; set; }
+}
