@@ -3,57 +3,62 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Add Review" Height="560" Width="400"
         WindowStartupLocation="CenterScreen">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </Window.Resources>
     <ScrollViewer>
         <StackPanel Margin="15">
             <TextBlock Text="Add Review" FontSize="18" FontWeight="Bold" Margin="0,0,0,15"/>
 
             <TextBlock Text="Author:"/>
-            <TextBox x:Name="AuthorBox" Margin="0,0,0,10"/>
+            <TextBox Text="{Binding NewReviewAuthor, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                     Margin="0,0,0,10"/>
 
-            <TextBlock x:Name="RatingLabel" Text="Rating: 1"/>
-            <Slider x:Name="RatingBox" Minimum="1" Maximum="5" TickFrequency="1"
-                    IsSnapToTickEnabled="True" Value="1" Margin="0,0,0,10"
-                    ValueChanged="RatingBox_ValueChanged"/>
+            <TextBlock Text="{Binding NewReviewRating, StringFormat='Rating: {0}'}"/>
+            <Slider Minimum="1" Maximum="5" TickFrequency="1"
+                    IsSnapToTickEnabled="True" Margin="0,0,0,10"
+                    Value="{Binding NewReviewRating, Mode=TwoWay}"/>
 
-            <TextBlock x:Name="NoiseLevelLabel" Text="Noise Level: 1"/>
-            <Slider x:Name="NoiseLevelBox" Minimum="1" Maximum="5" TickFrequency="1"
-                    IsSnapToTickEnabled="True" Value="1" Margin="0,0,0,10"
-                    ValueChanged="NoiseLevelBox_ValueChanged"/>
+            <TextBlock Text="{Binding NewReviewNoiseLevel, StringFormat='Noise Level: {0}'}"/>
+            <Slider Minimum="1" Maximum="5" TickFrequency="1"
+                    IsSnapToTickEnabled="True" Margin="0,0,0,10"
+                    Value="{Binding NewReviewNoiseLevel, Mode=TwoWay}"/>
 
-            <TextBlock x:Name="WifiStrengthLabel" Text="WiFi Strength: 0  (0 = No WiFi)"/>
-            <Slider x:Name="WifiStrengthBox" Minimum="0" Maximum="5" TickFrequency="1"
-                    IsSnapToTickEnabled="True" Value="0" Margin="0,0,0,10"
-                    ValueChanged="WifiStrengthBox_ValueChanged"/>
+            <TextBlock Text="{Binding NewReviewWifiStrength, StringFormat='WiFi Strength: {0}  (0 = No WiFi)'}"/>
+            <Slider Minimum="0" Maximum="5" TickFrequency="1"
+                    IsSnapToTickEnabled="True" Margin="0,0,0,10"
+                    Value="{Binding NewReviewWifiStrength, Mode=TwoWay}"/>
 
-            <StackPanel x:Name="IndoorPanel">
-                <TextBlock x:Name="ComfortLevelLabel" Text="Comfort Level: 1"/>
-                <Slider x:Name="ComfortLevelBox" Minimum="1" Maximum="5" TickFrequency="1"
-                        IsSnapToTickEnabled="True" Value="1" Margin="0,0,0,10"
-                        ValueChanged="ComfortLevelBox_ValueChanged"/>
+            <StackPanel Visibility="{Binding IsSelectedLocationIndoor, Converter={StaticResource BoolToVis}}">
+                <TextBlock Text="{Binding NewReviewComfortLevel, StringFormat='Comfort Level: {0}'}"/>
+                <Slider Minimum="1" Maximum="5" TickFrequency="1"
+                        IsSnapToTickEnabled="True" Margin="0,0,0,10"
+                        Value="{Binding NewReviewComfortLevel, Mode=TwoWay}"/>
 
-                <TextBlock x:Name="PriceLevelLabel" Text="Price Level: 1"/>
-                <Slider x:Name="PriceLevelBox" Minimum="1" Maximum="5" TickFrequency="1"
-                        IsSnapToTickEnabled="True" Value="1" Margin="0,0,0,10"
-                        ValueChanged="PriceLevelBox_ValueChanged"/>
+                <TextBlock Text="{Binding NewReviewPriceLevel, StringFormat='Price Level: {0}'}"/>
+                <Slider Minimum="1" Maximum="5" TickFrequency="1"
+                        IsSnapToTickEnabled="True" Margin="0,0,0,10"
+                        Value="{Binding NewReviewPriceLevel, Mode=TwoWay}"/>
             </StackPanel>
 
-            <StackPanel x:Name="OutdoorPanel" Visibility="Collapsed">
-                <TextBlock x:Name="CleanlinessLabel" Text="Cleanliness: 1"/>
-                <Slider x:Name="CleanlinessBox" Minimum="1" Maximum="5" TickFrequency="1"
-                        IsSnapToTickEnabled="True" Value="1" Margin="0,0,0,10"
-                        ValueChanged="CleanlinessBox_ValueChanged"/>
+            <StackPanel Visibility="{Binding IsSelectedLocationOutdoor, Converter={StaticResource BoolToVis}}">
+                <TextBlock Text="{Binding NewReviewCleanliness, StringFormat='Cleanliness: {0}'}"/>
+                <Slider Minimum="1" Maximum="5" TickFrequency="1"
+                        IsSnapToTickEnabled="True" Margin="0,0,0,10"
+                        Value="{Binding NewReviewCleanliness, Mode=TwoWay}"/>
 
-                <TextBlock x:Name="CrowdednessLabel" Text="Crowdedness: 1"/>
-                <Slider x:Name="CrowdednessBox" Minimum="1" Maximum="5" TickFrequency="1"
-                        IsSnapToTickEnabled="True" Value="1" Margin="0,0,0,10"
-                        ValueChanged="CrowdednessBox_ValueChanged"/>
+                <TextBlock Text="{Binding NewReviewCrowdedness, StringFormat='Crowdedness: {0}'}"/>
+                <Slider Minimum="1" Maximum="5" TickFrequency="1"
+                        IsSnapToTickEnabled="True" Margin="0,0,0,10"
+                        Value="{Binding NewReviewCrowdedness, Mode=TwoWay}"/>
             </StackPanel>
 
             <TextBlock Text="Comment:"/>
-            <TextBox x:Name="CommentBox" Height="80" TextWrapping="Wrap"
-                     AcceptsReturn="True" Margin="0,0,0,15"/>
+            <TextBox Text="{Binding NewReviewComment, Mode=TwoWay}"
+                     Height="80" TextWrapping="Wrap" AcceptsReturn="True" Margin="0,0,0,15"/>
 
-            <Button Content="Add Review" Padding="10,5" Click="Add_Click"/>
+            <Button Content="Add Review" Padding="10,5"
+                    Command="{Binding SaveNewReviewCommand}"/>
         </StackPanel>
     </ScrollViewer>
 </Window>

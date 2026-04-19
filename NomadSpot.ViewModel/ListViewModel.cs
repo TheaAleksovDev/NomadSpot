@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
 
@@ -6,15 +7,10 @@ namespace NomadSpot.ViewModel
 {
     public class ListViewModel<T> : BaseViewModel
     {
-        private IEnumerable<T> _items;
         private T _selectedItem;
         private IEnumerable<string> _visibleColumns;
 
-        public IEnumerable<T> Items
-        {
-            get => _items;
-            set => SetProperty(ref _items, value);
-        }
+        public ObservableCollection<T> Items { get; } = new ObservableCollection<T>();
 
         public T SelectedItem
         {
@@ -30,7 +26,10 @@ namespace NomadSpot.ViewModel
 
         public void SetItems(IEnumerable<T> items)
         {
-            Items = items;
+            Items.Clear();
+            if (items != null)
+                foreach (var item in items)
+                    Items.Add(item);
             SelectedItem = default;
         }
 
@@ -41,7 +40,7 @@ namespace NomadSpot.ViewModel
 
         public void Clear()
         {
-            Items = null;
+            Items.Clear();
             SelectedItem = default;
             VisibleColumns = null;
         }

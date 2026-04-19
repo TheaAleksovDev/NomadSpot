@@ -1,21 +1,27 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Windows.Input;
 
 namespace NomadSpot.ViewModel
 {
-    public class FilterProperty
+    public class FilterProperty : BaseViewModel
     {
-        public string Name { get; set; }
-        public string DisplayName { get; set; }
-        public Type PropertyType { get; set; }
-        public object Value { get; set; }
-        public string[] EnumValues { get; set; }
-        public double? Min { get; set; }
-        public double? Max { get; set; }
-        public double? MinValue { get; set; }
-        public double? MaxValue { get; set; }
-        public bool IsSlider => Min.HasValue && Max.HasValue;
+        public string   Name         { get; set; }
+        public string   DisplayName  { get; set; }
+        public Type     PropertyType { get; set; }
+        public string[] EnumValues   { get; set; }
+        public double?  Min          { get; set; }
+        public double?  Max          { get; set; }
+        public bool     IsSlider     => Min.HasValue && Max.HasValue;
+
+        private object  _value;
+        private double? _minValue;
+        private double? _maxValue;
+
+        public object  Value    { get => _value;    set => SetProperty(ref _value,    value); }
+        public double? MinValue { get => _minValue; set => SetProperty(ref _minValue, value); }
+        public double? MaxValue { get => _maxValue; set => SetProperty(ref _maxValue, value); }
     }
 
     public class FilterViewModel<T> : BaseViewModel, IFilterViewModel
@@ -38,6 +44,19 @@ namespace NomadSpot.ViewModel
             { "Crowdedness",  (1, 5) },
         };
 
+        public event EventHandler Searched;
+
+        private ICommand _searchCommand;
+        public ICommand SearchCommand
+        {
+            get => _searchCommand;
+            set => _searchCommand = new RelayCommand(
+                ()  => { value?.Execute(null); Searched?.Invoke(this, EventArgs.Empty); },
+                ()  => value?.CanExecute(null) ?? false);
+        }
+
+        public ICommand ClearCommand { get; }
+
         private List<FilterProperty> _filterProperties;
 
         public List<FilterProperty> FilterProperties
@@ -48,6 +67,7 @@ namespace NomadSpot.ViewModel
 
         public FilterViewModel()
         {
+            ClearCommand = new RelayCommand(ClearFilters);
             GenerateFilters();
         }
 

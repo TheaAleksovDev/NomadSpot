@@ -7,12 +7,12 @@
 
 <div class="mb-3">
     <label>Name:</label>
-    <input type="text" @bind="Name" class="form-control" />
+    <input type="text" @bind="ViewModel.NewName" class="form-control"/>
 </div>
 
 <div class="mb-3">
     <label>Address:</label>
-    <input type="text" @bind="Address" class="form-control" />
+    <input type="text" @bind="ViewModel.NewAddress" class="form-control"/>
 </div>
 
 <div class="mb-3">
@@ -20,179 +20,104 @@
     <div class="d-flex gap-3 mb-2">
         <div>
             <label class="form-label mb-0">Latitude</label>
-            <input type="number" step="0.00001" class="form-control" @bind="Latitude" @bind:event="oninput"/>
+            <input type="number" step="0.00001" class="form-control"
+                   @bind="ViewModel.NewLatitude" @bind:event="oninput"/>
         </div>
         <div>
             <label class="form-label mb-0">Longitude</label>
-            <input type="number" step="0.00001" class="form-control" @bind="Longitude" @bind:event="oninput"/>
+            <input type="number" step="0.00001" class="form-control"
+                   @bind="ViewModel.NewLongitude" @bind:event="oninput"/>
         </div>
     </div>
-    <MapPicker Lat="Latitude" Lng="Longitude"
-               OnCoordinatesSelected="coords => { Latitude = coords.Lat; Longitude = coords.Lng; StateHasChanged(); }"/>
+    <MapPicker Lat="ViewModel.NewLatitude" Lng="ViewModel.NewLongitude"
+               OnCoordinatesSelected="coords => { ViewModel.NewLatitude = coords.Lat; ViewModel.NewLongitude = coords.Lng; StateHasChanged(); }"/>
 </div>
 
 <div class="mb-3">
     <label>Type:</label>
-    <select class="form-control" @onchange="OnTypeChanged">
-        <option value="indoor">Indoor</option>
-        <option value="outdoor">Outdoor</option>
+    <select class="form-control" @bind="ViewModel.NewLocationTypeIndex">
+        <option value="0">Indoor</option>
+        <option value="1">Outdoor</option>
     </select>
 </div>
 
 <div class="mb-3">
-    <label>Noise Level: <strong>@NoiseLevel</strong></label>
-    <input type="range" min="1" max="5" step="1" @bind="NoiseLevel" class="form-range" />
+    <label>Noise Level: <strong>@ViewModel.NewNoiseLevel</strong></label>
+    <input type="range" min="1" max="5" step="1" @bind="ViewModel.NewNoiseLevel" class="form-range"/>
 </div>
 
 <div class="mb-3">
-    <label>WiFi Strength: <strong>@WifiStrength</strong></label>
-    <input type="range" min="0" max="5" step="1" @bind="WifiStrength" class="form-range" />
+    <label>WiFi Strength: <strong>@ViewModel.NewWifiStrength</strong></label>
+    <input type="range" min="0" max="5" step="1" @bind="ViewModel.NewWifiStrength" class="form-range"/>
     <small class="text-muted">0 = No WiFi</small>
 </div>
 
 <div class="mb-3">
-    <input type="checkbox" @bind="HasPowerOutlets" /> Has Power Outlets
+    <input type="checkbox" @bind="ViewModel.NewHasPowerOutlets"/> Has Power Outlets
 </div>
 
-@if (!IsIndoor)
+@if (ViewModel.NewIsOutdoor)
 {
     <div class="mb-3">
         <label>Outdoor Type:</label>
-        <select class="form-control" @onchange="e => OutdoorType = Enum.Parse<NomadSpot.Model.Entities.OutdoorType>(e.Value.ToString())">
-            @foreach (var val in Enum.GetValues<NomadSpot.Model.Entities.OutdoorType>())
+        <select class="form-control" @bind="ViewModel.NewOutdoorType">
+            @foreach (var val in Enum.GetValues<OutdoorType>())
             {
                 <option value="@val">@val</option>
             }
         </select>
     </div>
     <div class="mb-3">
-        <input type="checkbox" @bind="HasBenches" /> Has Benches
+        <input type="checkbox" @bind="ViewModel.NewHasBenches"/> Has Benches
     </div>
     <div class="mb-3">
-        <input type="checkbox" @bind="HasShade" /> Has Shade
+        <input type="checkbox" @bind="ViewModel.NewHasShade"/> Has Shade
     </div>
     <div class="mb-3">
-        <input type="checkbox" @bind="PetFriendly" /> Pet Friendly
+        <input type="checkbox" @bind="ViewModel.NewPetFriendly"/> Pet Friendly
     </div>
     <div class="mb-3">
-        <input type="checkbox" @bind="HasPublicToilet" /> Has Public Toilet
+        <input type="checkbox" @bind="ViewModel.NewHasPublicToilet"/> Has Public Toilet
     </div>
     <div class="mb-3">
-        <input type="checkbox" @bind="NearShops" /> Near Shops
+        <input type="checkbox" @bind="ViewModel.NewNearShops"/> Near Shops
     </div>
 }
 
-@if (IsIndoor)
+@if (ViewModel.NewIsIndoor)
 {
     <div class="mb-3">
         <label>Indoor Type:</label>
-        <select class="form-control" @onchange="e => IndoorType = Enum.Parse<NomadSpot.Model.Entities.IndoorType>(e.Value.ToString())">
-            @foreach (var val in Enum.GetValues<NomadSpot.Model.Entities.IndoorType>())
+        <select class="form-control" @bind="ViewModel.NewIndoorType">
+            @foreach (var val in Enum.GetValues<IndoorType>())
             {
                 <option value="@val">@val</option>
             }
         </select>
     </div>
     <div class="mb-3">
-        <label>Comfort Level: <strong>@ComfortLevel</strong></label>
-        <input type="range" min="1" max="5" step="1" @bind="ComfortLevel" class="form-range" />
+        <label>Comfort Level: <strong>@ViewModel.NewComfortLevel</strong></label>
+        <input type="range" min="1" max="5" step="1" @bind="ViewModel.NewComfortLevel" class="form-range"/>
     </div>
     <div class="mb-3">
-        <label>Price Level: <strong>@PriceLevel</strong></label>
-        <input type="range" min="1" max="5" step="1" @bind="PriceLevel" class="form-range" />
+        <label>Price Level: <strong>@ViewModel.NewPriceLevel</strong></label>
+        <input type="range" min="1" max="5" step="1" @bind="ViewModel.NewPriceLevel" class="form-range"/>
     </div>
     <div class="mb-3">
         <label>Opening Hours:</label>
-        <input type="text" @bind="OpeningHours" class="form-control" placeholder="e.g. 08:00-22:00" />
+        <input type="text" @bind="ViewModel.NewOpeningHours" class="form-control" placeholder="e.g. 08:00-22:00"/>
     </div>
 }
 
-<button class="btn btn-primary" @onclick="Add">Add Location</button>
+<button class="btn btn-primary"
+        disabled="@(!ViewModel.SaveNewLocationCommand.CanExecute(null))"
+        @onclick="() => ViewModel.SaveNewLocationCommand.Execute(null)">Add Location</button>
 
-@if (!string.IsNullOrEmpty(Message))
+@if (!string.IsNullOrEmpty(ViewModel.StatusMessage))
 {
-    <div class="alert alert-success mt-3">@Message</div>
+    <div class="alert alert-success mt-3">@ViewModel.StatusMessage</div>
 }
 
 @code {
     [Inject] LocationViewModel ViewModel { get; set; }
-
-    string Name { get; set; }
-    string Address { get; set; }
-    double Latitude { get; set; } = 42.6977;
-    double Longitude { get; set; } = 23.3219;
-    bool IsIndoor { get; set; } = true;
-    int NoiseLevel { get; set; } = 1;
-    int WifiStrength { get; set; } = 0;
-    bool HasPowerOutlets { get; set; }
-    bool HasBenches { get; set; }
-    bool HasShade { get; set; }
-    bool PetFriendly { get; set; }
-    bool HasPublicToilet { get; set; }
-    bool NearShops { get; set; }
-    OutdoorType OutdoorType { get; set; } = OutdoorType.Park;
-    int ComfortLevel { get; set; } = 1;
-    int PriceLevel { get; set; } = 1;
-    string OpeningHours { get; set; }
-    IndoorType IndoorType { get; set; } = IndoorType.Cafe;
-    string Message { get; set; }
-
-    void OnTypeChanged(ChangeEventArgs e)
-    {
-        IsIndoor = e.Value.ToString() == "indoor";
-    }
-
-    void Add()
-    {
-        if (string.IsNullOrWhiteSpace(Name))
-        {
-            Message = "Please enter a name.";
-            return;
-        }
-
-        Location location;
-        if (IsIndoor)
-        {
-            location = new IndoorLocation
-            {
-                Name = Name,
-                Address = Address,
-                Latitude = Latitude,
-                Longitude = Longitude,
-                NoiseLevel = NoiseLevel,
-                WifiStrength = WifiStrength,
-                HasPowerOutlets = HasPowerOutlets,
-                IsActive = true,
-                LocationType = "Indoor",
-                ComfortLevel = ComfortLevel,
-                PriceLevel = PriceLevel,
-                OpeningHours = OpeningHours,
-                IndoorType = IndoorType
-            };
-        }
-        else
-        {
-            location = new OutdoorLocation
-            {
-                Name = Name,
-                Address = Address,
-                Latitude = Latitude,
-                Longitude = Longitude,
-                NoiseLevel = NoiseLevel,
-                WifiStrength = WifiStrength,
-                HasPowerOutlets = HasPowerOutlets,
-                IsActive = true,
-                LocationType = "Outdoor",
-                HasBenches = HasBenches,
-                HasShade = HasShade,
-                PetFriendly = PetFriendly,
-                HasPublicToilet = HasPublicToilet,
-                NearShops = NearShops,
-                OutdoorType = OutdoorType
-            };
-        }
-
-        ViewModel.AddLocation(location);
-        Message = "Location added successfully!";
-    }
 }

@@ -1,7 +1,6 @@
-﻿using NomadSpot.Model.Database;
+using NomadSpot.Model.Database;
 using NomadSpot.ViewModel;
 using System.Windows;
-using System.Windows.Controls;
 
 namespace NomadSpot.WPF
 {
@@ -12,82 +11,76 @@ namespace NomadSpot.WPF
         public MainWindow()
         {
             InitializeComponent();
+            SetViewModel(CreateViewModel(DatabaseType.PostgreSQL,
+                Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING")!));
+        }
 
-            var dbType = DatabaseType.PostgreSQL;
-            var connStr = Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING")!;
-
+        private static LocationViewModel CreateViewModel(DatabaseType dbType, string connStr)
+        {
             var factory = new RepositoryFactory(dbType, connStr);
-
-            _viewModel = new LocationViewModel(
+            return new LocationViewModel(
                 factory.CreateLocationRepository(),
                 factory.CreateReviewRepository());
+        }
 
+        private void SetViewModel(LocationViewModel vm)
+        {
+            _viewModel = vm;
             DataContext = _viewModel;
-        }
-
-        private void FindLocations_Click(object sender, RoutedEventArgs e)
-        {
-            if (!double.TryParse(LatitudeBox.Text, out double lat) ||
-                !double.TryParse(LongitudeBox.Text, out double lon))
+            _viewModel.UseMyLocationCommand = new ViewModel.RelayCommand(async () =>
             {
-                MessageBox.Show("Please enter valid coordinates.");
-                return;
-            }
+                try
+                {
+                    var geolocator = new Windows.Devices.Geolocation.Geolocator();
+                    var position   = await geolocator.GetGeopositionAsync();
+                    _viewModel.UserLatitude  = position.Coordinate.Point.Position.Latitude;
+                    _viewModel.UserLongitude = position.Coordinate.Point.Position.Longitude;
+                }
+                catch
+                {
+                    _viewModel.StatusMessage = "Could not get location. Make sure location access is enabled in Windows Settings.";
+                }
+            });
 
-            _viewModel.UserLatitude = lat;
-            _viewModel.UserLongitude = lon;
-
-            if (int.TryParse(ResultCountBox.Text, out int count))
-                _viewModel.ResultCount = count;
-
-            bool indoorOnly = ((ComboBoxItem)LocationTypeBox.SelectedItem).Content.ToString() == "Indoor";
-            _viewModel.IndoorFilter.ClearFilters();
-            _viewModel.OutdoorFilter.ClearFilters();
-            _viewModel.FindClosestLocations(indoorOnly);
-
-            var window = new Views.LocationListWindow(_viewModel);
-            window.Show();
-        }
-
-        private void FilterLocations_Click(object sender, RoutedEventArgs e)
-        {
-            bool indoorOnly = ((ComboBoxItem)LocationTypeBox.SelectedItem).Content.ToString() == "Indoor";
-
-            IFilterViewModel filter = indoorOnly ? _viewModel.IndoorFilter : (IFilterViewModel)_viewModel.OutdoorFilter;
-
-            Action onSearch = () =>
+            _viewModel.LocationsFound += (s, e) =>
             {
-                _viewModel.UserLatitude = double.TryParse(LatitudeBox.Text, out double lat) ? lat : 0;
-                _viewModel.UserLongitude = double.TryParse(LongitudeBox.Text, out double lon) ? lon : 0;
-                _viewModel.FindClosestLocations(indoorOnly);
-
-                var listWindow = new Views.LocationListWindow(_viewModel);
-                listWindow.Show();
+                var w = new Views.LocationListWindow();
+                w.DataContext = _viewModel;
+                w.Show();
             };
-            var filterWindow = new Views.FilterWindow(filter, onSearch);
 
-            filterWindow.Show();
-        }
-
-        private void AddLocation_Click(object sender, RoutedEventArgs e)
-        {
-            var window = new Views.AddLocationWindow(_viewModel);
-            window.Show();
-        }
-
-        private async void UseMyLocation_Click(object sender, RoutedEventArgs e)
-        {
-            try
+            _viewModel.OpenAddLocationRequested += (s, e) =>
             {
-                var geolocator = new Windows.Devices.Geolocation.Geolocator();
-                var position = await geolocator.GetGeopositionAsync();
-                LatitudeBox.Text = position.Coordinate.Point.Position.Latitude.ToString("F6");
-                LongitudeBox.Text = position.Coordinate.Point.Position.Longitude.ToString("F6");
-            }
-            catch
+                var w = new Views.AddLocationWindow();
+                w.DataContext = _viewModel;
+                w.Show();
+            };
+
+            _viewModel.OpenAddReviewRequested += (s, e) =>
             {
-                MessageBox.Show("Could not get location. Make sure location access is enabled in Windows Settings.");
-            }
+                var w = new Views.AddReviewWindow();
+                w.DataContext = _viewModel;
+                w.Show();
+            };
+
+            _viewModel.OpenReviewListRequested += (s, e) =>
+            {
+                var w = new Views.ReviewListWindow();
+                w.DataContext = _viewModel;
+                w.Show();
+            };
+
+            _viewModel.OpenFilterRequested += filter =>
+            {
+                var filterWindow = new Views.FilterWindow(filter, new FilterControlFactory());
+                filterWindow.Show();
+            };
+
+            _viewModel.OpenReviewFilterRequested += filter =>
+            {
+                var filterWindow = new Views.FilterWindow(filter, new FilterControlFactory());
+                filterWindow.Show();
+            };
         }
 
         private void DB_Changed(object sender, RoutedEventArgs e)
@@ -97,15 +90,13 @@ namespace NomadSpot.WPF
                 ? Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING")!
                 : Environment.GetEnvironmentVariable("SQLITE_CONNECTION_STRING")!;
 
-            var factory = new RepositoryFactory(dbType, connStr);
+            var factory     = new RepositoryFactory(dbType, connStr);
             var initializer = new DatabaseInitializer(dbType, connStr);
             initializer.Initialize();
 
-            _viewModel = new LocationViewModel(
+            SetViewModel(new LocationViewModel(
                 factory.CreateLocationRepository(),
-                factory.CreateReviewRepository());
-
-            DataContext = _viewModel;
+                factory.CreateReviewRepository()));
         }
     }
 }

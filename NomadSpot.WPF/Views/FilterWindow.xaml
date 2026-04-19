@@ -16,8 +16,8 @@
         <ScrollViewer x:Name="FiltersScrollViewer" Grid.Row="1"/>
 
         <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,10,0,0">
-            <Button Content="Search" Padding="15,5" Margin="0,0,10,0" Click="Search_Click"/>
-            <Button Content="Clear" Padding="15,5" Click="Clear_Click"/>
+            <Button Content="Search" Padding="15,5" Margin="0,0,10,0" Command="{Binding SearchCommand}"/>
+            <Button Content="Clear"  Padding="15,5"                   Command="{Binding ClearCommand}"/>
         </StackPanel>
     </Grid>
 </Window>

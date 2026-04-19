@@ -3,71 +3,79 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Add Location" Height="620" Width="450"
         WindowStartupLocation="CenterScreen">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </Window.Resources>
     <ScrollViewer>
         <StackPanel Margin="15">
             <TextBlock Text="Add New Location" FontSize="18" FontWeight="Bold" Margin="0,0,0,15"/>
 
             <TextBlock Text="Name:"/>
-            <TextBox x:Name="NameBox" Margin="0,0,0,10"/>
+            <TextBox Text="{Binding NewName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                     Margin="0,0,0,10"/>
 
             <TextBlock Text="Address:"/>
-            <TextBox x:Name="AddressBox" Margin="0,0,0,10"/>
+            <TextBox Text="{Binding NewAddress, Mode=TwoWay}"
+                     Margin="0,0,0,10"/>
 
             <TextBlock Text="Latitude:"/>
             <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                <TextBox x:Name="LatBox" Width="200"/>
+                <TextBox Width="200" Text="{Binding NewLatitude, Mode=TwoWay}"/>
                 <Button Content="Use My Location" Margin="10,0,0,0" Padding="8,3"
-                        Click="UseMyLocation_Click"/>
+                        Command="{Binding UseMyLocationCommand}"/>
             </StackPanel>
 
             <TextBlock Text="Longitude:"/>
-            <TextBox x:Name="LonBox" Margin="0,0,0,10"/>
+            <TextBox Text="{Binding NewLongitude, Mode=TwoWay}" Margin="0,0,0,10"/>
 
             <TextBlock Text="Type:"/>
-            <ComboBox x:Name="TypeBox" Margin="0,0,0,10" SelectionChanged="TypeBox_SelectionChanged">
-                <ComboBoxItem Content="Indoor" IsSelected="True"/>
+            <ComboBox SelectedIndex="{Binding NewLocationTypeIndex, Mode=TwoWay}" Margin="0,0,0,10">
+                <ComboBoxItem Content="Indoor"/>
                 <ComboBoxItem Content="Outdoor"/>
             </ComboBox>
 
-            <TextBlock x:Name="NoiseLevelLabel" Text="Noise Level: 0"/>
-            <Slider x:Name="NoiseBox" Minimum="1" Maximum="5" TickFrequency="1"
-                    IsSnapToTickEnabled="True" Value="0" Margin="0,0,0,10"
-                    ValueChanged="NoiseBox_ValueChanged"/>
+            <TextBlock Text="{Binding NewNoiseLevel, StringFormat='Noise Level: {0}'}"/>
+            <Slider Minimum="1" Maximum="5" TickFrequency="1"
+                    IsSnapToTickEnabled="True" Margin="0,0,0,10"
+                    Value="{Binding NewNoiseLevel, Mode=TwoWay}"/>
 
-            <TextBlock x:Name="WifiStrengthLabel" Text="WiFi Strength: 0  (0 = No WiFi)"/>
-            <Slider x:Name="WifiBox" Minimum="0" Maximum="5" TickFrequency="1"
-                    IsSnapToTickEnabled="True" Value="0" Margin="0,0,0,10"
-                    ValueChanged="WifiBox_ValueChanged"/>
+            <TextBlock Text="{Binding NewWifiStrength, StringFormat='WiFi Strength: {0}  (0 = No WiFi)'}"/>
+            <Slider Minimum="0" Maximum="5" TickFrequency="1"
+                    IsSnapToTickEnabled="True" Margin="0,0,0,10"
+                    Value="{Binding NewWifiStrength, Mode=TwoWay}"/>
 
-            <CheckBox x:Name="PowerBox" Content="Has Power Outlets" Margin="0,0,0,15"/>
+            <CheckBox Content="Has Power Outlets" Margin="0,0,0,15"
+                      IsChecked="{Binding NewHasPowerOutlets, Mode=TwoWay}"/>
 
-            <StackPanel x:Name="IndoorPanel" Visibility="Visible">
+            <StackPanel x:Name="IndoorPanel"
+                        Visibility="{Binding NewIsIndoor, Converter={StaticResource BoolToVis}}">
                 <TextBlock Text="Indoor Options:" FontWeight="Bold" Margin="0,10,0,5"/>
                 <TextBlock Text="Indoor Type:"/>
-                <ComboBox x:Name="IndoorTypeBox" Margin="0,0,0,10">
-                    <ComboBoxItem Content="Cafe" IsSelected="True"/>
+                <ComboBox SelectedIndex="{Binding NewIndoorTypeIndex, Mode=TwoWay}" Margin="0,0,0,10">
+                    <ComboBoxItem Content="Cafe"/>
                     <ComboBoxItem Content="Library"/>
                     <ComboBoxItem Content="CoworkingSpace"/>
                     <ComboBoxItem Content="University"/>
                     <ComboBoxItem Content="Other"/>
                 </ComboBox>
-                <TextBlock x:Name="ComfortLevelLabel" Text="Comfort Level: 0"/>
-                <Slider x:Name="ComfortBox" Minimum="1" Maximum="5" TickFrequency="1"
-                        IsSnapToTickEnabled="True" Value="0" Margin="0,0,0,5"
-                        ValueChanged="ComfortBox_ValueChanged"/>
-                <TextBlock x:Name="PriceLevelLabel" Text="Price Level: 0"/>
-                <Slider x:Name="PriceBox" Minimum="1" Maximum="5" TickFrequency="1"
-                        IsSnapToTickEnabled="True" Value="0" Margin="0,0,0,5"
-                        ValueChanged="PriceBox_ValueChanged"/>
+                <TextBlock Text="{Binding NewComfortLevel, StringFormat='Comfort Level: {0}'}"/>
+                <Slider Minimum="1" Maximum="5" TickFrequency="1"
+                        IsSnapToTickEnabled="True" Margin="0,0,0,5"
+                        Value="{Binding NewComfortLevel, Mode=TwoWay}"/>
+                <TextBlock Text="{Binding NewPriceLevel, StringFormat='Price Level: {0}'}"/>
+                <Slider Minimum="1" Maximum="5" TickFrequency="1"
+                        IsSnapToTickEnabled="True" Margin="0,0,0,5"
+                        Value="{Binding NewPriceLevel, Mode=TwoWay}"/>
                 <TextBlock Text="Opening Hours:"/>
-                <TextBox x:Name="HoursBox" Margin="0,0,0,10" Text="08:00-22:00"/>
+                <TextBox Text="{Binding NewOpeningHours, Mode=TwoWay}" Margin="0,0,0,10"/>
             </StackPanel>
 
-            <StackPanel x:Name="OutdoorPanel" Visibility="Collapsed">
+            <StackPanel x:Name="OutdoorPanel"
+                        Visibility="{Binding NewIsOutdoor, Converter={StaticResource BoolToVis}}">
                 <TextBlock Text="Outdoor Options:" FontWeight="Bold" Margin="0,10,0,5"/>
                 <TextBlock Text="Outdoor Type:"/>
-                <ComboBox x:Name="OutdoorTypeBox" Margin="0,0,0,10">
-                    <ComboBoxItem Content="Park" IsSelected="True"/>
+                <ComboBox SelectedIndex="{Binding NewOutdoorTypeIndex, Mode=TwoWay}" Margin="0,0,0,10">
+                    <ComboBoxItem Content="Park"/>
                     <ComboBoxItem Content="Bench"/>
                     <ComboBoxItem Content="SportsCourt"/>
                     <ComboBoxItem Content="Beach"/>
@@ -75,14 +83,20 @@
                     <ComboBoxItem Content="Plaza"/>
                     <ComboBoxItem Content="Other"/>
                 </ComboBox>
-                <CheckBox x:Name="BenchesBox" Content="Has Benches" Margin="0,0,0,5"/>
-                <CheckBox x:Name="ShadeBox" Content="Has Shade" Margin="0,0,0,5"/>
-                <CheckBox x:Name="PetBox" Content="Pet Friendly" Margin="0,0,0,5"/>
-                <CheckBox x:Name="ToiletBox" Content="Has Public Toilet" Margin="0,0,0,5"/>
-                <CheckBox x:Name="ShopsBox" Content="Near Shops" Margin="0,0,0,10"/>
+                <CheckBox Content="Has Benches"       Margin="0,0,0,5"
+                          IsChecked="{Binding NewHasBenches, Mode=TwoWay}"/>
+                <CheckBox Content="Has Shade"         Margin="0,0,0,5"
+                          IsChecked="{Binding NewHasShade, Mode=TwoWay}"/>
+                <CheckBox Content="Pet Friendly"      Margin="0,0,0,5"
+                          IsChecked="{Binding NewPetFriendly, Mode=TwoWay}"/>
+                <CheckBox Content="Has Public Toilet" Margin="0,0,0,5"
+                          IsChecked="{Binding NewHasPublicToilet, Mode=TwoWay}"/>
+                <CheckBox Content="Near Shops"        Margin="0,0,0,10"
+                          IsChecked="{Binding NewNearShops, Mode=TwoWay}"/>
             </StackPanel>
 
-            <Button Content="Add Location" Padding="10,5" Click="Add_Click"/>
+            <Button Content="Add Location" Padding="10,5"
+                    Command="{Binding SaveNewLocationCommand}"/>
         </StackPanel>
     </ScrollViewer>
 </Window>

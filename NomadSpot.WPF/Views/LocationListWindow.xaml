@@ -1,8 +1,12 @@
 <Window x:Class="NomadSpot.WPF.Views.LocationListWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:wpf="clr-namespace:NomadSpot.WPF"
         Title="Locations" Height="600" Width="800"
         WindowStartupLocation="CenterScreen">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </Window.Resources>
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -11,26 +15,41 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <WrapPanel x:Name="ColumnsPanel" Grid.Row="0" Margin="0,0,0,10"/>
+        <!-- Column selector -->
+        <ItemsControl Grid.Row="0" ItemsSource="{Binding LocationColumns}" Margin="0,0,0,8">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <CheckBox Content="{Binding Name}"
+                              IsChecked="{Binding IsVisible, Mode=TwoWay}"
+                              Margin="0,0,8,0" VerticalAlignment="Center"/>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
 
         <DataGrid x:Name="LocationsGrid" Grid.Row="1"
                   AutoGenerateColumns="False"
                   IsReadOnly="True"
                   SelectionMode="Single"
-                  SelectionChanged="LocationsGrid_SelectionChanged">
-        </DataGrid>
+                  ItemsSource="{Binding LocationList.Items}"
+                  SelectedItem="{Binding LocationList.SelectedItem, Mode=TwoWay}"
+                  wpf:DataGridColumnsBehavior.ColumnsSource="{Binding LocationColumns}"/>
 
         <!-- Detail panel shown when a row is selected -->
-        <Border x:Name="DetailPanel" Grid.Row="2" Visibility="Collapsed"
+        <Border Grid.Row="2"
+                Visibility="{Binding HasSelectedLocation, Converter={StaticResource BoolToVis}}"
                 BorderBrush="#ccc" BorderThickness="1" CornerRadius="4"
                 Margin="0,8,0,0" Padding="10">
             <StackPanel>
                 <DockPanel>
-                    <TextBlock x:Name="DetailTitle" FontSize="14" FontWeight="Bold" DockPanel.Dock="Left"/>
+                    <TextBlock Text="{Binding LocationList.SelectedItem.Name}"
+                               FontSize="14" FontWeight="Bold" DockPanel.Dock="Left"/>
                     <Button Content="Close" HorizontalAlignment="Right" Padding="8,2"
-                            Click="CloseDetail_Click"/>
+                            Command="{Binding CloseLocationDetailCommand}"/>
                 </DockPanel>
-                <ItemsControl x:Name="DetailItems" Margin="0,6,0,0">
+                <ItemsControl ItemsSource="{Binding SelectedLocationDetails}" Margin="0,6,0,0">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
                             <WrapPanel/>
@@ -49,10 +68,14 @@
         </Border>
 
         <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,10,0,0">
-            <Button Content="Add Review" Margin="0,0,10,0" Padding="10,5" Click="AddReview_Click"/>
-            <Button Content="View Reviews" Margin="0,0,10,0" Padding="10,5" Click="ViewReviews_Click"/>
-            <Button Content="Mark Inactive" Margin="0,0,10,0" Padding="10,5" Click="MarkInactive_Click"/>
-            <Button Content="Clear" Padding="10,5" Click="Clear_Click"/>
+            <Button Content="Add Review"    Margin="0,0,10,0" Padding="10,5"
+                    Command="{Binding OpenAddReviewCommand}"/>
+            <Button Content="View Reviews"  Margin="0,0,10,0" Padding="10,5"
+                    Command="{Binding ViewReviewsCommand}"/>
+            <Button Content="Mark Inactive" Margin="0,0,10,0" Padding="10,5"
+                    Command="{Binding MarkInactiveCommand}"/>
+            <Button Content="Clear" Padding="10,5"
+                    Command="{Binding ClearLocationsCommand}"/>
         </StackPanel>
     </Grid>
 </Window>

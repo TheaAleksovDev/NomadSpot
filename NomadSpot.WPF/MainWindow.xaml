@@ -27,33 +27,36 @@
 
         <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,10">
             <TextBlock Text="Latitude:" Width="80" VerticalAlignment="Center"/>
-            <TextBox x:Name="LatitudeBox" Width="150"/>
+            <TextBox Width="150" Text="{Binding UserLatitude, Mode=TwoWay}"/>
             <Button Content="Use My Location" Margin="10,0,0,0" Padding="8,3"
-                    Click="UseMyLocation_Click"/>
+                    Command="{Binding UseMyLocationCommand}"/>
         </StackPanel>
 
         <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,0,0,10">
             <TextBlock Text="Longitude:" Width="80" VerticalAlignment="Center"/>
-            <TextBox x:Name="LongitudeBox" Width="150"/>
+            <TextBox Width="150" Text="{Binding UserLongitude, Mode=TwoWay}"/>
         </StackPanel>
 
         <StackPanel Grid.Row="4" Orientation="Horizontal" Margin="0,0,0,10">
             <TextBlock Text="Type:" Width="80" VerticalAlignment="Center"/>
-            <ComboBox x:Name="LocationTypeBox" Width="150">
-                <ComboBoxItem Content="Indoor" IsSelected="True"/>
+            <ComboBox Width="150" SelectedIndex="{Binding SearchTypeIndex, Mode=TwoWay}">
+                <ComboBoxItem Content="Indoor"/>
                 <ComboBoxItem Content="Outdoor"/>
             </ComboBox>
         </StackPanel>
 
         <StackPanel Grid.Row="5" Orientation="Horizontal" Margin="0,0,0,10">
             <TextBlock Text="Results:" Width="80" VerticalAlignment="Center"/>
-            <TextBox x:Name="ResultCountBox" Width="50" Text="3"/>
+            <TextBox Width="50" Text="{Binding ResultCount, Mode=TwoWay}"/>
         </StackPanel>
 
         <StackPanel Grid.Row="6" Orientation="Vertical" VerticalAlignment="Bottom">
-            <Button Content="Find Closest Locations" Margin="0,5" Padding="10,5" Click="FindLocations_Click"/>
-            <Button Content="Search with Filters" Margin="0,5" Padding="10,5" Click="FilterLocations_Click"/>
-            <Button Content="Add New Location" Margin="0,5" Padding="10,5" Click="AddLocation_Click"/>
+            <Button Content="Find Closest Locations" Margin="0,5" Padding="10,5"
+                    Command="{Binding FindLocationsCommand}"/>
+            <Button Content="Search with Filters" Margin="0,5" Padding="10,5"
+                    Command="{Binding OpenFilterCommand}"/>
+            <Button Content="Add New Location" Margin="0,5" Padding="10,5"
+                    Command="{Binding OpenAddLocationCommand}"/>
         </StackPanel>
     </Grid>
 </Window>

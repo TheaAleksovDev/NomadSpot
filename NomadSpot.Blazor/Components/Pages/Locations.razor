@@ -2,7 +2,6 @@
 @rendermode InteractiveServer
 @using NomadSpot.ViewModel
 @using NomadSpot.Model.Entities
-@using System.Linq
 @using System.Reflection
 
 <h3>Find Locations</h3>
@@ -12,49 +11,55 @@
     <div class="d-flex gap-3 mb-2">
         <div>
             <label class="form-label mb-0">Latitude</label>
-            <input type="number" step="0.00001" class="form-control" @bind="Latitude" @bind:event="oninput"/>
+            <input type="number" step="0.00001" class="form-control"
+                   @bind="ViewModel.UserLatitude" @bind:event="oninput"/>
         </div>
         <div>
             <label class="form-label mb-0">Longitude</label>
-            <input type="number" step="0.00001" class="form-control" @bind="Longitude" @bind:event="oninput"/>
+            <input type="number" step="0.00001" class="form-control"
+                   @bind="ViewModel.UserLongitude" @bind:event="oninput"/>
         </div>
     </div>
-    <MapPicker Lat="Latitude" Lng="Longitude"
-               OnCoordinatesSelected="coords => { Latitude = coords.Lat; Longitude = coords.Lng; StateHasChanged(); }"/>
+    <MapPicker Lat="ViewModel.UserLatitude" Lng="ViewModel.UserLongitude"
+               OnCoordinatesSelected="coords => { ViewModel.UserLatitude = coords.Lat; ViewModel.UserLongitude = coords.Lng; StateHasChanged(); }"/>
 </div>
 
 <div class="mb-3">
     <label>Type:</label>
-    <select class="form-control" @onchange='e => IsIndoor = e.Value.ToString() == "indoor"'>
-        <option value="indoor">Indoor</option>
-        <option value="outdoor">Outdoor</option>
+    <select class="form-control" @bind="ViewModel.SearchTypeIndex">
+        <option value="0">Indoor</option>
+        <option value="1">Outdoor</option>
     </select>
 </div>
 
 <div class="mb-3">
     <label>Results:</label>
-    <input type="number" @bind="ResultCount" class="form-control"/>
+    <input type="number" @bind="ViewModel.ResultCount" class="form-control"/>
 </div>
 
-<button class="btn btn-primary me-2" @onclick="FindLocations">Find Closest</button>
-<button class="btn btn-secondary me-2" @onclick="OpenFilters">Search with Filters</button>
-<button class="btn btn-outline-danger" @onclick="ClearResults">Clear Results</button>
+<button class="btn btn-primary me-2"   @onclick="() => { ViewModel.FindLocationsCommand.Execute(null); ShowFilters = false; }">Find Closest</button>
+<button class="btn btn-secondary me-2" @onclick="() => ShowFilters = !ShowFilters">Search with Filters</button>
+<button class="btn btn-outline-danger" @onclick="() => { ViewModel.ClearResultsCommand.Execute(null); ShowReview = false; ShowReviews = false; ShowReviewFilters = false; }">Clear Results</button>
 
 @if (ShowFilters)
 {
     <div class="card mt-3 p-3">
         <h5>Filters</h5>
-        @foreach (var filter in GetActiveFilters())
+        @foreach (var filter in ViewModel.CurrentFilter.FilterProperties)
         {
             <div class="mb-2">
                 <label>@filter.DisplayName</label>
                 @if (filter.PropertyType == typeof(bool) || filter.PropertyType == typeof(bool?))
                 {
-                    <input type="checkbox" @onchange="e => filter.Value = e.Value" class="ms-2"/>
+                    <input type="checkbox" class="ms-2"
+                           @bind:get="(bool)(filter.Value ?? false)"
+                           @bind:set="v => filter.Value = v"/>
                 }
                 else if (filter.PropertyType.IsEnum)
                 {
-                    <select class="form-select" @onchange="e => filter.Value = string.IsNullOrEmpty(e.Value?.ToString()) ? null : (object)(int)Enum.Parse(filter.PropertyType, e.Value.ToString())">
+                    <select class="form-select"
+                            @bind:get="filter.Value?.ToString() ?? string.Empty"
+                            @bind:set="v => filter.Value = string.IsNullOrEmpty(v) ? null : (object)(int)Enum.Parse(filter.PropertyType, v)">
                         <option value="">(Any)</option>
                         @foreach (var name in filter.EnumValues)
                         {
@@ -66,44 +71,39 @@
                 {
                     <div class="d-flex align-items-center gap-2 flex-wrap">
                         <span class="text-muted small">Min:</span>
-                        <input type="range"
-                               min="@filter.Min" max="@filter.Max" step="1"
-                               value="@filter.MinValue"
+                        <input type="range" min="@filter.Min" max="@filter.Max" step="1"
                                class="form-range" style="width:140px"
-                               @onchange="e => filter.MinValue = double.Parse(e.Value.ToString())"/>
+                               @bind="filter.MinValue" @bind:event="oninput"/>
                         <span>@filter.MinValue</span>
                         <span class="text-muted small ms-2">Max:</span>
-                        <input type="range"
-                               min="@filter.Min" max="@filter.Max" step="1"
-                               value="@filter.MaxValue"
+                        <input type="range" min="@filter.Min" max="@filter.Max" step="1"
                                class="form-range" style="width:140px"
-                               @onchange="e => filter.MaxValue = double.Parse(e.Value.ToString())"/>
+                               @bind="filter.MaxValue" @bind:event="oninput"/>
                         <span>@filter.MaxValue</span>
                         <button class="btn btn-sm btn-outline-secondary"
                                 @onclick="() => { filter.MinValue = filter.Min; filter.MaxValue = filter.Max; }">Reset</button>
                     </div>
                 }
-                else if (filter.PropertyType == typeof(int) || filter.PropertyType == typeof(int?) ||
-                         filter.PropertyType == typeof(double) || filter.PropertyType == typeof(double?))
-                {
-                    <input type="number" class="form-control" @onchange="e => filter.Value = e.Value?.ToString()"/>
-                }
                 else if (filter.PropertyType == typeof(DateTime) || filter.PropertyType == typeof(DateTime?))
                 {
-                    <input type="date" class="form-control" @onchange="e => filter.Value = e.Value"/>
+                    <input type="date" class="form-control"
+                           @bind:get="filter.Value is DateTime ? (DateTime)filter.Value : default(DateTime)"
+                           @bind:set="v => filter.Value = v"/>
                 }
                 else
                 {
-                    <input type="text" class="form-control" @onchange="e => filter.Value = e.Value?.ToString()"/>
+                    <input type="text" class="form-control"
+                           @bind:get="filter.Value?.ToString() ?? string.Empty"
+                           @bind:set="v => filter.Value = string.IsNullOrEmpty(v) ? null : v"/>
                 }
             </div>
         }
-        <button class="btn btn-primary me-2" @onclick="ApplyFilters">Apply</button>
-        <button class="btn btn-outline-secondary" @onclick="ClearFilters">Clear</button>
+        <button class="btn btn-primary me-2"      @onclick="() => { ViewModel.FindWithFiltersCommand.Execute(null); ShowFilters = false; }">Apply</button>
+        <button class="btn btn-outline-secondary" @onclick="() => ViewModel.ClearFiltersCommand.Execute(null)">Clear</button>
     </div>
 }
 
-@if (LocationResults != null && LocationResults.Any())
+@if (ViewModel.LocationList.Items.Any())
 {
     <div class="mt-3">
         <h5>Results</h5>
@@ -112,8 +112,8 @@
             @foreach (var col in AllColumns)
             {
                 <label class="me-3">
-                    <input type="checkbox" checked="@SelectedColumns.Contains(col)"
-                           @onchange="e => ToggleColumn(col, (bool)e.Value)"/> @col
+                    <input type="checkbox" checked="@ViewModel.SelectedLocationColumns.Contains(col)"
+                           @onchange="e => ViewModel.ToggleLocationColumn(col, (bool)e.Value)"/> @col
                 </label>
             }
         </div>
@@ -121,32 +121,30 @@
         <table class="table table-striped table-hover">
             <thead>
                 <tr>
-                    @foreach (var col in SelectedColumns)
-                    {
-                        <th>@col</th>
-                    }
+                    @foreach (var col in ViewModel.SelectedLocationColumns) { <th>@col</th> }
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach (var loc in LocationResults)
+                @foreach (var loc in ViewModel.LocationList.Items)
                 {
-                    <tr class="@(SelectedLocation == loc ? "table-primary" : "")"
-                        @onclick="() => SelectedLocation = loc" style="cursor:pointer">
-                        @foreach (var col in SelectedColumns)
+                    <tr class="@(ViewModel.LocationList.SelectedItem == loc ? "table-primary" : "")"
+                        @onclick="() => ViewModel.SelectLocation(loc)"
+                        style="cursor:pointer">
+                        @foreach (var col in ViewModel.SelectedLocationColumns)
                         {
                             <td>@loc.GetType().GetProperty(col)?.GetValue(loc)</td>
                         }
                         <td>
                             <button class="btn btn-sm btn-warning me-1"
                                     @onclick:stopPropagation="true"
-                                    @onclick="() => MarkInactive(loc)">Inactive</button>
+                                    @onclick="() => ViewModel.MarkInactiveCommand.Execute(loc)">Inactive</button>
                             <button class="btn btn-sm btn-info me-1"
                                     @onclick:stopPropagation="true"
-                                    @onclick="() => OpenReview(loc)">Review</button>
+                                    @onclick="() => { ViewModel.OpenAddReviewCommand.Execute(loc); ShowReview = true; }">Review</button>
                             <button class="btn btn-sm btn-secondary"
                                     @onclick:stopPropagation="true"
-                                    @onclick="() => ViewReviews(loc)">View Reviews</button>
+                                    @onclick="() => { ViewModel.ViewReviewsCommand.Execute(loc); ShowReviews = true; ShowReview = false; }">View Reviews</button>
                         </td>
                     </tr>
                 }
@@ -155,17 +153,18 @@
     </div>
 }
 
-@if (SelectedLocation != null && !ShowReview)
+@if (ViewModel.LocationList.SelectedItem != null && !ShowReview)
 {
     <div class="card mt-3 p-3">
         <div class="d-flex justify-content-between align-items-center mb-2">
-            <h5 class="mb-0">@SelectedLocation.Name</h5>
-            <button class="btn btn-sm btn-outline-secondary" @onclick="() => SelectedLocation = null">&times; Close</button>
+            <h5 class="mb-0">@ViewModel.LocationList.SelectedItem.Name</h5>
+            <button class="btn btn-sm btn-outline-secondary"
+                    @onclick="() => ViewModel.SelectLocation(null)">&times; Close</button>
         </div>
         <div class="row">
-            @foreach (var prop in SelectedLocation.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
+            @foreach (var prop in ViewModel.LocationList.SelectedItem.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
             {
-                var val = prop.GetValue(SelectedLocation);
+                var val = prop.GetValue(ViewModel.LocationList.SelectedItem);
                 <div class="col-md-4 mb-1">
                     <small class="text-muted">@prop.Name</small><br/>
                     <strong>@(val ?? "-")</strong>
@@ -175,14 +174,16 @@
     </div>
 }
 
-@if (ShowReviews && ReviewsLocation != null && ViewModel.ReviewList.Items != null)
+@if (ShowReviews && ViewModel.LocationList.SelectedItem != null)
 {
     <div class="card mt-3 p-3">
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="mb-0">Reviews for @ReviewsLocation.Name</h5>
+            <h5 class="mb-0">Reviews for @ViewModel.LocationList.SelectedItem.Name</h5>
             <div>
-                <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => ShowReviewFilters = !ShowReviewFilters">Filter</button>
-                <button class="btn btn-sm btn-outline-secondary" @onclick="() => { ShowReviews = false; ShowReviewFilters = false; ViewModel.ReviewFilter.ClearFilters(); }">&times; Close</button>
+                <button class="btn btn-sm btn-outline-primary me-2"
+                        @onclick="() => ShowReviewFilters = !ShowReviewFilters">Filter</button>
+                <button class="btn btn-sm btn-outline-secondary"
+                        @onclick="() => { ShowReviews = false; ShowReviewFilters = false; ViewModel.ReviewFilter.ClearCommand.Execute(null); }">&times; Close</button>
             </div>
         </div>
 
@@ -195,30 +196,35 @@
                         <label>@filter.DisplayName</label>
                         @if (filter.PropertyType == typeof(bool) || filter.PropertyType == typeof(bool?))
                         {
-                            <input type="checkbox" @onchange="e => filter.Value = e.Value" class="ms-2"/>
+                            <input type="checkbox" class="ms-2"
+                                   @bind:get="(bool)(filter.Value ?? false)"
+                                   @bind:set="v => filter.Value = v"/>
                         }
                         else if (filter.IsSlider)
                         {
                             <div class="d-flex align-items-center gap-2 flex-wrap">
                                 <span class="text-muted small">Min:</span>
                                 <input type="range" min="@filter.Min" max="@filter.Max" step="1"
-                                       value="@filter.MinValue" class="form-range" style="width:120px"
-                                       @onchange="e => filter.MinValue = double.Parse(e.Value.ToString())"/>
+                                       class="form-range" style="width:120px"
+                                       @bind="filter.MinValue" @bind:event="oninput"/>
                                 <span>@filter.MinValue</span>
                                 <span class="text-muted small ms-2">Max:</span>
                                 <input type="range" min="@filter.Min" max="@filter.Max" step="1"
-                                       value="@filter.MaxValue" class="form-range" style="width:120px"
-                                       @onchange="e => filter.MaxValue = double.Parse(e.Value.ToString())"/>
+                                       class="form-range" style="width:120px"
+                                       @bind="filter.MaxValue" @bind:event="oninput"/>
                                 <span>@filter.MaxValue</span>
                             </div>
                         }
                         else
                         {
-                            <input type="text" class="form-control" @onchange="e => filter.Value = e.Value?.ToString()"/>
+                            <input type="text" class="form-control"
+                                   @bind:get="filter.Value?.ToString() ?? string.Empty"
+                                   @bind:set="v => filter.Value = string.IsNullOrEmpty(v) ? null : v"/>
                         }
                     </div>
                 }
-                <button class="btn btn-sm btn-outline-secondary" @onclick="() => ViewModel.ReviewFilter.ClearFilters()">Clear</button>
+                <button class="btn btn-sm btn-outline-secondary"
+                        @onclick="() => ViewModel.ReviewFilter.ClearCommand.Execute(null)">Clear</button>
             </div>
         }
 
@@ -230,11 +236,11 @@
         {
             <div class="mb-2">
                 <strong>Columns: </strong>
-                @foreach (var col in ReviewAllColumns)
+                @foreach (var col in ViewModel.FilteredReviewColumns)
                 {
                     <label class="me-3">
-                        <input type="checkbox" checked="@ReviewSelectedColumns.Contains(col)"
-                               @onchange="e => ToggleReviewColumn(col, (bool)e.Value)"/> @col
+                        <input type="checkbox" checked="@ViewModel.SelectedReviewColumns.Contains(col)"
+                               @onchange="e => ViewModel.ToggleReviewColumn(col, (bool)e.Value)"/> @col
                     </label>
                 }
             </div>
@@ -242,17 +248,14 @@
             <table class="table table-striped table-sm">
                 <thead>
                     <tr>
-                        @foreach (var col in ReviewSelectedColumns)
-                        {
-                            <th>@col</th>
-                        }
+                        @foreach (var col in ViewModel.SelectedReviewColumns) { <th>@col</th> }
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var review in GetFilteredReviews())
+                    @foreach (var review in ViewModel.GetFilteredReviews())
                     {
                         <tr>
-                            @foreach (var col in ReviewSelectedColumns)
+                            @foreach (var col in ViewModel.SelectedReviewColumns)
                             {
                                 <td>@review.GetType().GetProperty(col)?.GetValue(review)</td>
                             }
@@ -264,234 +267,80 @@
     </div>
 }
 
-@if (ShowReview && SelectedLocation != null)
+@if (ShowReview && ViewModel.LocationList.SelectedItem != null)
 {
     <div class="card mt-3 p-3">
         <div class="d-flex justify-content-between align-items-center mb-2">
-            <h5 class="mb-0">Add Review for @SelectedLocation.Name</h5>
-            <button class="btn btn-sm btn-outline-secondary" @onclick="() => ShowReview = false">&times; Close</button>
+            <h5 class="mb-0">Add Review for @ViewModel.LocationList.SelectedItem.Name</h5>
+            <button class="btn btn-sm btn-outline-secondary"
+                    @onclick="() => ShowReview = false">&times; Close</button>
         </div>
         <div class="mb-2">
             <label>Author:</label>
-            <input type="text" @bind="ReviewAuthor" class="form-control"/>
+            <input type="text" @bind="ViewModel.NewReviewAuthor" class="form-control"/>
         </div>
         <div class="mb-2">
-            <label>Rating (1-5): <strong>@ReviewRating</strong></label>
-            <input type="range" min="1" max="5" step="1" @bind="ReviewRating" class="form-range"/>
+            <label>Rating (1-5): <strong>@ViewModel.NewReviewRating</strong></label>
+            <input type="range" min="1" max="5" step="1"
+                   @bind="ViewModel.NewReviewRating" class="form-range"/>
         </div>
         <div class="mb-2">
-            <label>Noise Level (1-5): <strong>@ReviewNoiseLevel</strong></label>
-            <input type="range" min="1" max="5" step="1" @bind="ReviewNoiseLevel" class="form-range"/>
+            <label>Noise Level (1-5): <strong>@ViewModel.NewReviewNoiseLevel</strong></label>
+            <input type="range" min="1" max="5" step="1"
+                   @bind="ViewModel.NewReviewNoiseLevel" class="form-range"/>
         </div>
         <div class="mb-2">
-            <label>WiFi Strength (0-5): <strong>@ReviewWifiStrength</strong></label>
-            <input type="range" min="0" max="5" step="1" @bind="ReviewWifiStrength" class="form-range"/>
+            <label>WiFi Strength (0-5): <strong>@ViewModel.NewReviewWifiStrength</strong></label>
+            <input type="range" min="0" max="5" step="1"
+                   @bind="ViewModel.NewReviewWifiStrength" class="form-range"/>
             <small class="text-muted">0 = No WiFi</small>
         </div>
-        @if (SelectedLocation.LocationType == "Indoor")
+        @if (ViewModel.IsSelectedLocationIndoor)
         {
             <div class="mb-2">
-                <label>Comfort Level (1-5): <strong>@ReviewComfortLevel</strong></label>
-                <input type="range" min="1" max="5" step="1" @bind="ReviewComfortLevel" class="form-range"/>
+                <label>Comfort Level (1-5): <strong>@ViewModel.NewReviewComfortLevel</strong></label>
+                <input type="range" min="1" max="5" step="1"
+                       @bind="ViewModel.NewReviewComfortLevel" class="form-range"/>
             </div>
             <div class="mb-2">
-                <label>Price Level (1-5): <strong>@ReviewPriceLevel</strong></label>
-                <input type="range" min="1" max="5" step="1" @bind="ReviewPriceLevel" class="form-range"/>
+                <label>Price Level (1-5): <strong>@ViewModel.NewReviewPriceLevel</strong></label>
+                <input type="range" min="1" max="5" step="1"
+                       @bind="ViewModel.NewReviewPriceLevel" class="form-range"/>
             </div>
         }
         else
         {
             <div class="mb-2">
-                <label>Cleanliness (1-5): <strong>@ReviewCleanliness</strong></label>
-                <input type="range" min="1" max="5" step="1" @bind="ReviewCleanliness" class="form-range"/>
+                <label>Cleanliness (1-5): <strong>@ViewModel.NewReviewCleanliness</strong></label>
+                <input type="range" min="1" max="5" step="1"
+                       @bind="ViewModel.NewReviewCleanliness" class="form-range"/>
             </div>
             <div class="mb-2">
-                <label>Crowdedness (1-5): <strong>@ReviewCrowdedness</strong></label>
-                <input type="range" min="1" max="5" step="1" @bind="ReviewCrowdedness" class="form-range"/>
+                <label>Crowdedness (1-5): <strong>@ViewModel.NewReviewCrowdedness</strong></label>
+                <input type="range" min="1" max="5" step="1"
+                       @bind="ViewModel.NewReviewCrowdedness" class="form-range"/>
             </div>
         }
         <div class="mb-2">
             <label>Comment:</label>
-            <textarea @bind="ReviewComment" class="form-control" rows="3"></textarea>
+            <textarea @bind="ViewModel.NewReviewComment" class="form-control" rows="3"></textarea>
         </div>
-        <button class="btn btn-success" @onclick="SubmitReview">Submit Review</button>
+        <button class="btn btn-success" @onclick="() => { ViewModel.SaveNewReviewCommand.Execute(null); ShowReview = false; }">Submit Review</button>
     </div>
 }
 
-@if (!string.IsNullOrEmpty(Message))
+@if (!string.IsNullOrEmpty(ViewModel.StatusMessage))
 {
-    <div class="alert alert-success mt-3">@Message</div>
+    <div class="alert alert-success mt-3">@ViewModel.StatusMessage</div>
 }
 
 @code {
     [Inject] LocationViewModel ViewModel { get; set; }
 
-    double Latitude { get; set; } = 42.6977;
-    double Longitude { get; set; } = 23.3219;
-    bool IsIndoor { get; set; } = true;
-    int ResultCount { get; set; } = 3;
-    bool ShowFilters { get; set; }
-    bool ShowReview { get; set; }
-    bool ShowReviews { get; set; }
+    bool ShowFilters       { get; set; }
+    bool ShowReview        { get; set; }
+    bool ShowReviews       { get; set; }
     bool ShowReviewFilters { get; set; }
-    Location ReviewsLocation { get; set; }
-    string ReviewAuthor { get; set; }
-    int ReviewRating { get; set; } = 5;
-    int ReviewNoiseLevel { get; set; } = 3;
-    int ReviewWifiStrength { get; set; } = 3;
-    int ReviewComfortLevel { get; set; } = 1;
-    int ReviewPriceLevel { get; set; } = 1;
-    int ReviewCleanliness { get; set; } = 1;
-    int ReviewCrowdedness { get; set; } = 1;
-    string ReviewComment { get; set; }
-    string Message { get; set; }
-
-    IEnumerable<Location> LocationResults { get; set; }
-    Location SelectedLocation { get; set; }
 
     List<string> AllColumns => ViewModel.LocationList.GetAllColumnNames().ToList();
-    List<string> SelectedColumns = new() { "Name", "Address", "LocationType", "Rating" };
-
-    private static readonly string[] IndoorOnlyColumns = { "ComfortLevel", "PriceLevel" };
-    private static readonly string[] OutdoorOnlyColumns = { "Cleanliness", "Crowdedness" };
-
-    List<string> ReviewAllColumns => ViewModel.ReviewList.GetAllColumnNames()
-        .Where(c => ReviewsLocation?.LocationType == "Indoor"
-            ? !OutdoorOnlyColumns.Contains(c)
-            : !IndoorOnlyColumns.Contains(c))
-        .ToList();
-    List<string> ReviewSelectedColumns = new() { "Author", "Rating", "NoiseLevel", "WifiStrength", "Comment", "Date" };
-
-    void FindLocations()
-    {
-        ViewModel.UserLatitude = Latitude;
-        ViewModel.UserLongitude = Longitude;
-        ViewModel.ResultCount = ResultCount;
-        ViewModel.FindClosestLocations(IsIndoor);
-        SelectedColumns = new List<string> { "Name", "Address", "LocationType", "Rating" };
-        ViewModel.LocationList.SetColumns(SelectedColumns);
-        LocationResults = ViewModel.LocationList.Items;
-        ShowFilters = false;
-    }
-
-    void OpenFilters() => ShowFilters = !ShowFilters;
-
-    List<FilterProperty> GetActiveFilters() =>
-        IsIndoor ? ViewModel.IndoorFilter.FilterProperties : ViewModel.OutdoorFilter.FilterProperties;
-
-    void ApplyFilters()
-    {
-        FindLocations();
-        ShowFilters = false;
-    }
-
-    void ClearFilters()
-    {
-        ViewModel.IndoorFilter.ClearFilters();
-        ViewModel.OutdoorFilter.ClearFilters();
-    }
-
-    void ToggleColumn(string col, bool add)
-    {
-        if (add && !SelectedColumns.Contains(col)) SelectedColumns.Add(col);
-        else if (!add) SelectedColumns.Remove(col);
-        ViewModel.LocationList.SetColumns(SelectedColumns);
-    }
-
-    void ClearResults()
-    {
-        ViewModel.LocationList.Clear();
-        LocationResults = null;
-        SelectedLocation = null;
-        ShowReview = false;
-        ShowReviews = false;
-        ShowReviewFilters = false;
-        ReviewsLocation = null;
-        ViewModel.ReviewFilter.ClearFilters();
-        Message = null;
-    }
-
-    void MarkInactive(Location loc)
-    {
-        ViewModel.SetInactive(loc.Id);
-        FindLocations();
-        Message = $"'{loc.Name}' marked as inactive.";
-    }
-
-    void ViewReviews(Location loc)
-    {
-        ReviewsLocation = loc;
-        ViewModel.LoadReviews(loc.Id);
-        var excluded = loc.LocationType == "Indoor" ? OutdoorOnlyColumns : IndoorOnlyColumns;
-        ReviewSelectedColumns = ReviewSelectedColumns.Where(c => !excluded.Contains(c)).ToList();
-        ViewModel.ReviewList.SetColumns(ReviewSelectedColumns);
-        ShowReviews = true;
-        ShowReview = false;
-    }
-
-    IEnumerable<Review> GetFilteredReviews()
-    {
-        var reviews = ViewModel.ReviewList.Items ?? Enumerable.Empty<Review>();
-        var filters = ViewModel.ReviewFilter.GetActiveFilters();
-        foreach (var f in filters)
-        {
-            var key = f.Key;
-            var colName = key.Replace("_min", "").Replace("_max", "");
-            var prop = typeof(Review).GetProperty(colName, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
-            if (prop == null) continue;
-            if (key.EndsWith("_min"))
-                reviews = reviews.Where(r => Convert.ToDouble(prop.GetValue(r)) >= Convert.ToDouble(f.Value));
-            else if (key.EndsWith("_max"))
-                reviews = reviews.Where(r => Convert.ToDouble(prop.GetValue(r)) <= Convert.ToDouble(f.Value));
-            else
-                reviews = reviews.Where(r => prop.GetValue(r)?.ToString() == f.Value?.ToString());
-        }
-        return reviews;
-    }
-
-    void ToggleReviewColumn(string col, bool add)
-    {
-        if (add && !ReviewSelectedColumns.Contains(col)) ReviewSelectedColumns.Add(col);
-        else if (!add) ReviewSelectedColumns.Remove(col);
-        ViewModel.ReviewList.SetColumns(ReviewSelectedColumns);
-    }
-
-    void OpenReview(Location loc)
-    {
-        SelectedLocation = loc;
-        ShowReview = true;
-        ReviewAuthor = "";
-        ReviewRating = 1;
-        ReviewNoiseLevel = 1;
-        ReviewWifiStrength = 0;
-        ReviewComfortLevel = 1;
-        ReviewPriceLevel = 1;
-        ReviewCleanliness = 1;
-        ReviewCrowdedness = 1;
-        ReviewComment = "";
-    }
-
-    void SubmitReview()
-    {
-        var locId = SelectedLocation.Id;
-        var review = new Review
-        {
-            LocationId = locId,
-            Author = ReviewAuthor,
-            Rating = ReviewRating,
-            NoiseLevel = ReviewNoiseLevel,
-            WifiStrength = ReviewWifiStrength,
-            ComfortLevel = SelectedLocation.LocationType == "Indoor" ? ReviewComfortLevel : 0,
-            PriceLevel = SelectedLocation.LocationType == "Indoor" ? ReviewPriceLevel : 0,
-            Cleanliness = SelectedLocation.LocationType == "Outdoor" ? ReviewCleanliness : 0,
-            Crowdedness = SelectedLocation.LocationType == "Outdoor" ? ReviewCrowdedness : 0,
-            Comment = ReviewComment,
-            Date = DateTime.Now
-        };
-        ViewModel.AddReview(review);
-        ShowReview = false;
-        Message = "Review added successfully!";
-        FindLocations();
-        SelectedLocation = LocationResults?.FirstOrDefault(l => l.Id == locId);
-    }
 }
