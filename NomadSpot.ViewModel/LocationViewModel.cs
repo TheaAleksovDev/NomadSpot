@@ -14,14 +14,14 @@ namespace NomadSpot.ViewModel
         private readonly ILocationRepository _locationRepository;
         private readonly IReviewRepository _reviewRepository;
 
-        private double _userLatitude  = 42.6977;
+        private double _userLatitude = 42.6977;
         private double _userLongitude = 23.3219;
         private int _resultCount = 3;
         private int _searchTypeIndex = 0;
 
-        public double UserLatitude   { get => _userLatitude;   set => SetProperty(ref _userLatitude, value); }
-        public double UserLongitude  { get => _userLongitude;  set => SetProperty(ref _userLongitude, value); }
-        public int    ResultCount    { get => _resultCount;    set => SetProperty(ref _resultCount, value); }
+        public double UserLatitude { get => _userLatitude; set => SetProperty(ref _userLatitude, value); }
+        public double UserLongitude { get => _userLongitude; set => SetProperty(ref _userLongitude, value); }
+        public int ResultCount { get => _resultCount; set => SetProperty(ref _resultCount, value); }
 
         public int SearchTypeIndex
         {
@@ -38,15 +38,15 @@ namespace NomadSpot.ViewModel
             IsIndoorSearch ? IndoorFilter : (IFilterViewModel)OutdoorFilter;
 
         public ListViewModel<Location> LocationList { get; } = new ListViewModel<Location>();
-        public ListViewModel<Review>   ReviewList   { get; } = new ListViewModel<Review>();
-        public FilterViewModel<IndoorLocation>  IndoorFilter  { get; } = new FilterViewModel<IndoorLocation>();
+        public ListViewModel<Review> ReviewList { get; } = new ListViewModel<Review>();
+        public FilterViewModel<IndoorLocation> IndoorFilter { get; } = new FilterViewModel<IndoorLocation>();
         public FilterViewModel<OutdoorLocation> OutdoorFilter { get; } = new FilterViewModel<OutdoorLocation>();
-        public FilterViewModel<Review>          ReviewFilter  { get; } = new FilterViewModel<Review>();
+        public FilterViewModel<Review> ReviewFilter { get; } = new FilterViewModel<Review>();
 
-        public bool   HasSelectedLocation      => LocationList.SelectedItem != null;
-        public bool   IsSelectedLocationIndoor => LocationList.SelectedItem?.LocationType == "Indoor";
-        public bool   IsSelectedLocationOutdoor=> LocationList.SelectedItem?.LocationType == "Outdoor";
-        public string ReviewListTitle          => $"Reviews for: {LocationList.SelectedItem?.Name ?? ""}";
+        public bool HasSelectedLocation => LocationList.SelectedItem != null;
+        public bool IsSelectedLocationIndoor => LocationList.SelectedItem?.LocationType == "Indoor";
+        public bool IsSelectedLocationOutdoor => LocationList.SelectedItem?.LocationType == "Outdoor";
+        public string ReviewListTitle => $"Reviews for: {LocationList.SelectedItem?.Name ?? ""}";
 
         private List<KeyValuePair<string, object>> _selectedLocationDetails;
         public List<KeyValuePair<string, object>> SelectedLocationDetails
@@ -105,35 +105,35 @@ namespace NomadSpot.ViewModel
         private string _newAddress = "";
         private double _newLatitude;
         private double _newLongitude;
-        private int    _newLocationTypeIndex = 0;
-        private int    _newNoiseLevel = 1;
-        private int    _newWifiStrength = 0;
-        private bool   _newHasPowerOutlets;
-        private int    _newComfortLevel = 1;
-        private int    _newPriceLevel = 1;
+        private int _newLocationTypeIndex = 0;
+        private int _newNoiseLevel = 1;
+        private int _newWifiStrength = 0;
+        private bool _newHasPowerOutlets;
+        private int _newComfortLevel = 1;
+        private int _newPriceLevel = 1;
         private string _newOpeningHours = "08:00-22:00";
-        private int    _newIndoorTypeIndex = 0;
-        private bool   _newHasBenches;
-        private bool   _newHasShade;
-        private bool   _newPetFriendly;
-        private bool   _newHasPublicToilet;
-        private bool   _newNearShops;
-        private int    _newOutdoorTypeIndex = 0;
+        private int _newIndoorTypeIndex = 0;
+        private bool _newHasBenches;
+        private bool _newHasShade;
+        private bool _newPetFriendly;
+        private bool _newHasPublicToilet;
+        private bool _newNearShops;
+        private int _newOutdoorTypeIndex = 0;
 
-        public static readonly string[] IndoorTypes  = { "Cafe", "Library", "CoworkingSpace", "University", "Other" };
+        public static readonly string[] IndoorTypes = { "Cafe", "Library", "CoworkingSpace", "University", "Other" };
         public static readonly string[] OutdoorTypes = { "Park", "Bench", "SportsCourt", "Beach", "Garden", "Plaza", "Other" };
 
-        public static readonly string[] LocationIndoorOnlyColumns  = { "ComfortLevel", "PriceLevel", "OpeningHours", "IndoorType" };
+        public static readonly string[] LocationIndoorOnlyColumns = { "ComfortLevel", "PriceLevel", "OpeningHours", "IndoorType" };
         public static readonly string[] LocationOutdoorOnlyColumns = { "HasBenches", "HasShade", "PetFriendly", "HasPublicToilet", "NearShops", "OutdoorType" };
-        public static readonly string[] ReviewIndoorOnlyColumns    = { "ComfortLevel", "PriceLevel" };
-        public static readonly string[] ReviewOutdoorOnlyColumns   = { "Cleanliness", "Crowdedness" };
+        public static readonly string[] ReviewIndoorOnlyColumns = { "ComfortLevel", "PriceLevel" };
+        public static readonly string[] ReviewOutdoorOnlyColumns = { "Cleanliness", "Crowdedness" };
 
         public string NewName
         {
             get => _newName;
             set { if (SetProperty(ref _newName, value)) ((RelayCommand)SaveNewLocationCommand).RaiseCanExecuteChanged(); }
         }
-        public string NewAddress         { get => _newAddress;         set => SetProperty(ref _newAddress, value); }
+        public string NewAddress { get => _newAddress; set => SetProperty(ref _newAddress, value); }
         public double NewLatitude
         {
             get => _newLatitude;
@@ -154,26 +154,26 @@ namespace NomadSpot.ViewModel
                 OnPropertyChanged(nameof(NewIsOutdoor));
             }
         }
-        public bool NewIsIndoor  => _newLocationTypeIndex == 0;
+        public bool NewIsIndoor => _newLocationTypeIndex == 0;
         public bool NewIsOutdoor => _newLocationTypeIndex == 1;
-        public int  NewNoiseLevel       { get => _newNoiseLevel;       set => SetProperty(ref _newNoiseLevel, value); }
-        public int  NewWifiStrength     { get => _newWifiStrength;     set => SetProperty(ref _newWifiStrength, value); }
-        public bool NewHasPowerOutlets  { get => _newHasPowerOutlets;  set => SetProperty(ref _newHasPowerOutlets, value); }
-        public int  NewComfortLevel     { get => _newComfortLevel;     set => SetProperty(ref _newComfortLevel, value); }
-        public int  NewPriceLevel       { get => _newPriceLevel;       set => SetProperty(ref _newPriceLevel, value); }
-        public string NewOpeningHours   { get => _newOpeningHours;     set => SetProperty(ref _newOpeningHours, value); }
-        public int  NewIndoorTypeIndex  { get => _newIndoorTypeIndex;  set => SetProperty(ref _newIndoorTypeIndex, value); }
+        public int NewNoiseLevel { get => _newNoiseLevel; set => SetProperty(ref _newNoiseLevel, value); }
+        public int NewWifiStrength { get => _newWifiStrength; set => SetProperty(ref _newWifiStrength, value); }
+        public bool NewHasPowerOutlets { get => _newHasPowerOutlets; set => SetProperty(ref _newHasPowerOutlets, value); }
+        public int NewComfortLevel { get => _newComfortLevel; set => SetProperty(ref _newComfortLevel, value); }
+        public int NewPriceLevel { get => _newPriceLevel; set => SetProperty(ref _newPriceLevel, value); }
+        public string NewOpeningHours { get => _newOpeningHours; set => SetProperty(ref _newOpeningHours, value); }
+        public int NewIndoorTypeIndex { get => _newIndoorTypeIndex; set => SetProperty(ref _newIndoorTypeIndex, value); }
         public IndoorType NewIndoorType
         {
             get => Enum.Parse<IndoorType>(IndoorTypes[_newIndoorTypeIndex]);
             set => NewIndoorTypeIndex = Array.IndexOf(IndoorTypes, value.ToString());
         }
-        public bool NewHasBenches       { get => _newHasBenches;       set => SetProperty(ref _newHasBenches, value); }
-        public bool NewHasShade         { get => _newHasShade;         set => SetProperty(ref _newHasShade, value); }
-        public bool NewPetFriendly      { get => _newPetFriendly;      set => SetProperty(ref _newPetFriendly, value); }
-        public bool NewHasPublicToilet  { get => _newHasPublicToilet;  set => SetProperty(ref _newHasPublicToilet, value); }
-        public bool NewNearShops        { get => _newNearShops;        set => SetProperty(ref _newNearShops, value); }
-        public int  NewOutdoorTypeIndex { get => _newOutdoorTypeIndex; set => SetProperty(ref _newOutdoorTypeIndex, value); }
+        public bool NewHasBenches { get => _newHasBenches; set => SetProperty(ref _newHasBenches, value); }
+        public bool NewHasShade { get => _newHasShade; set => SetProperty(ref _newHasShade, value); }
+        public bool NewPetFriendly { get => _newPetFriendly; set => SetProperty(ref _newPetFriendly, value); }
+        public bool NewHasPublicToilet { get => _newHasPublicToilet; set => SetProperty(ref _newHasPublicToilet, value); }
+        public bool NewNearShops { get => _newNearShops; set => SetProperty(ref _newNearShops, value); }
+        public int NewOutdoorTypeIndex { get => _newOutdoorTypeIndex; set => SetProperty(ref _newOutdoorTypeIndex, value); }
         public OutdoorType NewOutdoorType
         {
             get => Enum.Parse<OutdoorType>(OutdoorTypes[_newOutdoorTypeIndex]);
@@ -182,39 +182,39 @@ namespace NomadSpot.ViewModel
 
         private string _newReviewAuthor = "";
         private string _newReviewComment = "";
-        private int    _newReviewRating = 1;
-        private int    _newReviewNoiseLevel = 1;
-        private int    _newReviewWifiStrength = 0;
-        private int    _newReviewComfortLevel = 1;
-        private int    _newReviewPriceLevel = 1;
-        private int    _newReviewCleanliness = 1;
-        private int    _newReviewCrowdedness = 1;
+        private int _newReviewRating = 1;
+        private int _newReviewNoiseLevel = 1;
+        private int _newReviewWifiStrength = 0;
+        private int _newReviewComfortLevel = 1;
+        private int _newReviewPriceLevel = 1;
+        private int _newReviewCleanliness = 1;
+        private int _newReviewCrowdedness = 1;
 
         public string NewReviewAuthor
         {
             get => _newReviewAuthor;
             set { if (SetProperty(ref _newReviewAuthor, value)) ((RelayCommand)SaveNewReviewCommand).RaiseCanExecuteChanged(); }
         }
-        public string NewReviewComment      { get => _newReviewComment;      set => SetProperty(ref _newReviewComment, value); }
-        public int    NewReviewRating       { get => _newReviewRating;       set => SetProperty(ref _newReviewRating, value); }
-        public int    NewReviewNoiseLevel   { get => _newReviewNoiseLevel;   set => SetProperty(ref _newReviewNoiseLevel, value); }
-        public int    NewReviewWifiStrength { get => _newReviewWifiStrength; set => SetProperty(ref _newReviewWifiStrength, value); }
-        public int    NewReviewComfortLevel { get => _newReviewComfortLevel; set => SetProperty(ref _newReviewComfortLevel, value); }
-        public int    NewReviewPriceLevel   { get => _newReviewPriceLevel;   set => SetProperty(ref _newReviewPriceLevel, value); }
-        public int    NewReviewCleanliness  { get => _newReviewCleanliness;  set => SetProperty(ref _newReviewCleanliness, value); }
-        public int    NewReviewCrowdedness  { get => _newReviewCrowdedness;  set => SetProperty(ref _newReviewCrowdedness, value); }
+        public string NewReviewComment { get => _newReviewComment; set => SetProperty(ref _newReviewComment, value); }
+        public int NewReviewRating { get => _newReviewRating; set => SetProperty(ref _newReviewRating, value); }
+        public int NewReviewNoiseLevel { get => _newReviewNoiseLevel; set => SetProperty(ref _newReviewNoiseLevel, value); }
+        public int NewReviewWifiStrength { get => _newReviewWifiStrength; set => SetProperty(ref _newReviewWifiStrength, value); }
+        public int NewReviewComfortLevel { get => _newReviewComfortLevel; set => SetProperty(ref _newReviewComfortLevel, value); }
+        public int NewReviewPriceLevel { get => _newReviewPriceLevel; set => SetProperty(ref _newReviewPriceLevel, value); }
+        public int NewReviewCleanliness { get => _newReviewCleanliness; set => SetProperty(ref _newReviewCleanliness, value); }
+        public int NewReviewCrowdedness { get => _newReviewCrowdedness; set => SetProperty(ref _newReviewCrowdedness, value); }
 
         private string _statusMessage;
         public string StatusMessage { get => _statusMessage; set => SetProperty(ref _statusMessage, value); }
 
         private static readonly string[] DefaultLocationColumns = { "Name", "Address", "LocationType", "Rating" };
-        private static readonly string[] DefaultReviewColumns   = { "Author", "Rating", "NoiseLevel", "WifiStrength", "Comment", "Date" };
+        private static readonly string[] DefaultReviewColumns = { "Author", "Rating", "NoiseLevel", "WifiStrength", "Comment", "Date" };
 
         public ObservableCollection<ColumnOption> LocationColumns { get; private set; } = new();
-        public ObservableCollection<ColumnOption> ReviewColumns   { get; private set; } = new();
+        public ObservableCollection<ColumnOption> ReviewColumns { get; private set; } = new();
 
         public List<string> SelectedLocationColumns { get; private set; } = new(DefaultLocationColumns);
-        public List<string> SelectedReviewColumns   { get; private set; } = new(DefaultReviewColumns);
+        public List<string> SelectedReviewColumns { get; private set; } = new(DefaultReviewColumns);
 
         public void ToggleLocationColumn(string col, bool add)
         {
@@ -232,79 +232,91 @@ namespace NomadSpot.ViewModel
 
         public void SelectLocation(Location loc) => LocationList.SelectedItem = loc;
 
-        public event EventHandler LocationsFound;
-        public event EventHandler OpenAddLocationRequested;
-        public event EventHandler OpenAddReviewRequested;
-        public event EventHandler OpenReviewListRequested;
+        public IWindowService WindowService { get; set; }
+        public IGeolocationService GeolocationService { get; set; }
+
         public event EventHandler LocationSaved;
         public event EventHandler ReviewSaved;
-        public event Action<IFilterViewModel> OpenFilterRequested;
-        public event Action<IFilterViewModel> OpenReviewFilterRequested;
 
-        public ICommand FindLocationsCommand    { get; }
-        public ICommand FindWithFiltersCommand  { get; }
-        public ICommand OpenAddLocationCommand  { get; }
-        public ICommand OpenAddReviewCommand    { get; }
-        public ICommand ViewReviewsCommand      { get; }
-        public ICommand SaveNewLocationCommand  { get; }
-        public ICommand SaveNewReviewCommand    { get; }
-        public ICommand MarkInactiveCommand     { get; }
-        public ICommand ClearLocationsCommand   { get; }
-        public ICommand ClearReviewsCommand     { get; }
-        public ICommand FilterReviewsCommand    { get; }
-        public ICommand OpenFilterCommand       { get; }
-        public ICommand ClearFiltersCommand         { get; }
-        public ICommand OpenReviewFilterCommand     { get; }
-        public ICommand ClearResultsCommand         { get; }
-        public ICommand UseMyLocationCommand        { get; set; }
-        public ICommand CloseReviewDetailCommand    { get; }
-        public ICommand CloseLocationDetailCommand  { get; }
+        public ICommand FindLocationsCommand { get; }
+        public ICommand FindWithFiltersCommand { get; }
+        public ICommand OpenAddLocationCommand { get; }
+        public ICommand OpenAddReviewCommand { get; }
+        public ICommand ViewReviewsCommand { get; }
+        public ICommand SaveNewLocationCommand { get; }
+        public ICommand SaveNewReviewCommand { get; }
+        public ICommand MarkInactiveCommand { get; }
+        public ICommand ClearLocationsCommand { get; }
+        public ICommand ClearReviewsCommand { get; }
+        public ICommand FilterReviewsCommand { get; }
+        public ICommand OpenFilterCommand { get; }
+        public ICommand ClearFiltersCommand { get; }
+        public ICommand OpenReviewFilterCommand { get; }
+        public ICommand ClearResultsCommand { get; }
+        public ICommand UseMyLocationCommand { get; private set; }
+        public ICommand CloseReviewDetailCommand { get; }
+        public ICommand CloseLocationDetailCommand { get; }
 
         public LocationViewModel(ILocationRepository locationRepository, IReviewRepository reviewRepository)
         {
             _locationRepository = locationRepository;
-            _reviewRepository   = reviewRepository;
+            _reviewRepository = reviewRepository;
 
-            FindLocationsCommand   = new RelayCommand(ExecuteFindLocations);
+            FindLocationsCommand = new RelayCommand(ExecuteFindLocations);
             FindWithFiltersCommand = new RelayCommand(ExecuteFindWithFilters);
-            OpenAddLocationCommand = new RelayCommand(() => OpenAddLocationRequested?.Invoke(this, EventArgs.Empty));
-            OpenAddReviewCommand   = new RelayCommand(param =>
+            OpenAddLocationCommand = new RelayCommand(() => WindowService?.ShowAddLocation());
+            OpenAddReviewCommand = new RelayCommand(param =>
             {
                 if (param is Location loc) SelectLocation(loc);
                 ResetNewReviewForm();
-                OpenAddReviewRequested?.Invoke(this, EventArgs.Empty);
+                WindowService?.ShowAddReview();
             });
-            ViewReviewsCommand     = new RelayCommand(param => ExecuteViewReviews(param));
+            ViewReviewsCommand = new RelayCommand(param => ExecuteViewReviews(param));
             SaveNewLocationCommand = new RelayCommand(ExecuteSaveNewLocation,
                                                       () => !string.IsNullOrWhiteSpace(NewName)
                                                             && NewLatitude != 0
                                                             && NewLongitude != 0);
-            SaveNewReviewCommand   = new RelayCommand(ExecuteSaveNewReview,
+            SaveNewReviewCommand = new RelayCommand(ExecuteSaveNewReview,
                                                       () => !string.IsNullOrWhiteSpace(NewReviewAuthor));
-            MarkInactiveCommand    = new RelayCommand(param => ExecuteMarkInactive(param), () => HasSelectedLocation);
-            ClearLocationsCommand  = new RelayCommand(() => { LocationList.Clear(); LocationList.SelectedItem = null; });
-            ClearReviewsCommand    = new RelayCommand(() => ReviewList.Clear());
-            FilterReviewsCommand   = new RelayCommand(ExecuteFilterReviews);
-            OpenFilterCommand      = new RelayCommand(ExecuteOpenFilter);
-            ClearFiltersCommand      = new RelayCommand(() => { IndoorFilter.ClearFilters(); OutdoorFilter.ClearFilters(); });
-            OpenReviewFilterCommand  = new RelayCommand(() => OpenReviewFilterRequested?.Invoke(ReviewFilter));
-            CloseReviewDetailCommand    = new RelayCommand(() => SelectedReview = null);
-            CloseLocationDetailCommand  = new RelayCommand(() => SelectLocation(null));
-            ClearResultsCommand        = new RelayCommand(() =>
+            MarkInactiveCommand = new RelayCommand(param => ExecuteMarkInactive(param), () => HasSelectedLocation);
+            ClearLocationsCommand = new RelayCommand(() => { LocationList.Clear(); LocationList.SelectedItem = null; });
+            ClearReviewsCommand = new RelayCommand(() => ReviewList.Clear());
+            FilterReviewsCommand = new RelayCommand(ExecuteFilterReviews);
+            OpenFilterCommand = new RelayCommand(ExecuteOpenFilter);
+            ClearFiltersCommand = new RelayCommand(() => { IndoorFilter.ClearFilters(); OutdoorFilter.ClearFilters(); });
+            OpenReviewFilterCommand = new RelayCommand(() => WindowService?.ShowReviewFilter(ReviewFilter));
+            CloseReviewDetailCommand = new RelayCommand(() => SelectedReview = null);
+            CloseLocationDetailCommand = new RelayCommand(() => SelectLocation(null));
+            ClearResultsCommand = new RelayCommand(() =>
             {
                 LocationList.Clear();
                 ReviewList.Clear();
                 LocationList.SelectedItem = null;
                 SelectedLocationColumns = new List<string>(DefaultLocationColumns);
-                SelectedReviewColumns   = new List<string>(DefaultReviewColumns);
+                SelectedReviewColumns = new List<string>(DefaultReviewColumns);
                 LocationList.SetColumns(SelectedLocationColumns);
                 ReviewFilter.ClearFilters();
                 StatusMessage = null;
             });
 
-            IndoorFilter.SearchCommand  = FindWithFiltersCommand;
+            UseMyLocationCommand = new RelayCommand(async () =>
+            {
+                if (GeolocationService == null) return;
+                try
+                {
+                    var (lat, lon) = await GeolocationService.GetLocationAsync();
+                    UserLatitude  = lat;
+                    UserLongitude = lon;
+                }
+                catch
+                {
+                    StatusMessage = "Could not get location. Make sure location access is enabled in Windows Settings.";
+                }
+            });
+
+            IndoorFilter.SearchCommand = FindWithFiltersCommand;
             OutdoorFilter.SearchCommand = FindWithFiltersCommand;
-            ReviewFilter.SearchCommand  = FilterReviewsCommand;
+            ReviewFilter.SearchCommand = FilterReviewsCommand;
 
             LocationList.PropertyChanged += (s, e) =>
             {
@@ -330,19 +342,19 @@ namespace NomadSpot.ViewModel
             RebuildLocationColumns(IsIndoorSearch);
             SelectedLocationColumns = new List<string>(DefaultLocationColumns);
             LocationList.SetColumns(SelectedLocationColumns);
-            LocationsFound?.Invoke(this, EventArgs.Empty);
+            WindowService?.ShowLocations();
         }
 
         private void ExecuteFindWithFilters()
         {
             FindClosestLocations(IsIndoorSearch);
             RebuildLocationColumns(IsIndoorSearch);
-            LocationsFound?.Invoke(this, EventArgs.Empty);
+            WindowService?.ShowLocations();
         }
 
         private void ExecuteOpenFilter()
         {
-            OpenFilterRequested?.Invoke(CurrentFilter);
+            WindowService?.ShowFilter(CurrentFilter);
         }
 
         private void ExecuteViewReviews(object param)
@@ -357,7 +369,7 @@ namespace NomadSpot.ViewModel
             SelectedReviewColumns = new List<string>(DefaultReviewColumns)
                 .Where(c => !excluded.Contains(c)).ToList();
             ReviewList.SetColumns(SelectedReviewColumns);
-            OpenReviewListRequested?.Invoke(this, EventArgs.Empty);
+            WindowService?.ShowReviews();
         }
 
         private void ExecuteSaveNewLocation()
@@ -367,40 +379,40 @@ namespace NomadSpot.ViewModel
             {
                 location = new IndoorLocation
                 {
-                    Name             = NewName,
-                    Address          = NewAddress,
-                    Latitude         = NewLatitude,
-                    Longitude        = NewLongitude,
-                    NoiseLevel       = NewNoiseLevel,
-                    WifiStrength     = NewWifiStrength,
-                    HasPowerOutlets  = NewHasPowerOutlets,
-                    IsActive         = true,
-                    LocationType     = "Indoor",
-                    ComfortLevel     = NewComfortLevel,
-                    PriceLevel       = NewPriceLevel,
-                    OpeningHours     = NewOpeningHours,
-                    IndoorType       = Enum.Parse<IndoorType>(IndoorTypes[NewIndoorTypeIndex])
+                    Name = NewName,
+                    Address = NewAddress,
+                    Latitude = NewLatitude,
+                    Longitude = NewLongitude,
+                    NoiseLevel = NewNoiseLevel,
+                    WifiStrength = NewWifiStrength,
+                    HasPowerOutlets = NewHasPowerOutlets,
+                    IsActive = true,
+                    LocationType = "Indoor",
+                    ComfortLevel = NewComfortLevel,
+                    PriceLevel = NewPriceLevel,
+                    OpeningHours = NewOpeningHours,
+                    IndoorType = Enum.Parse<IndoorType>(IndoorTypes[NewIndoorTypeIndex])
                 };
             }
             else
             {
                 location = new OutdoorLocation
                 {
-                    Name             = NewName,
-                    Address          = NewAddress,
-                    Latitude         = NewLatitude,
-                    Longitude        = NewLongitude,
-                    NoiseLevel       = NewNoiseLevel,
-                    WifiStrength     = NewWifiStrength,
-                    HasPowerOutlets  = NewHasPowerOutlets,
-                    IsActive         = true,
-                    LocationType     = "Outdoor",
-                    HasBenches       = NewHasBenches,
-                    HasShade         = NewHasShade,
-                    PetFriendly      = NewPetFriendly,
-                    HasPublicToilet  = NewHasPublicToilet,
-                    NearShops        = NewNearShops,
-                    OutdoorType      = Enum.Parse<OutdoorType>(OutdoorTypes[NewOutdoorTypeIndex])
+                    Name = NewName,
+                    Address = NewAddress,
+                    Latitude = NewLatitude,
+                    Longitude = NewLongitude,
+                    NoiseLevel = NewNoiseLevel,
+                    WifiStrength = NewWifiStrength,
+                    HasPowerOutlets = NewHasPowerOutlets,
+                    IsActive = true,
+                    LocationType = "Outdoor",
+                    HasBenches = NewHasBenches,
+                    HasShade = NewHasShade,
+                    PetFriendly = NewPetFriendly,
+                    HasPublicToilet = NewHasPublicToilet,
+                    NearShops = NewNearShops,
+                    OutdoorType = Enum.Parse<OutdoorType>(OutdoorTypes[NewOutdoorTypeIndex])
                 };
             }
 
@@ -413,17 +425,17 @@ namespace NomadSpot.ViewModel
         {
             var review = new Review
             {
-                LocationId    = LocationList.SelectedItem.Id,
-                Author        = NewReviewAuthor,
-                Comment       = NewReviewComment,
-                Rating        = NewReviewRating,
-                NoiseLevel    = NewReviewNoiseLevel,
-                WifiStrength  = NewReviewWifiStrength,
-                ComfortLevel  = IsSelectedLocationIndoor ? NewReviewComfortLevel : 0,
-                PriceLevel    = IsSelectedLocationIndoor ? NewReviewPriceLevel   : 0,
-                Cleanliness   = IsSelectedLocationIndoor ? 0 : NewReviewCleanliness,
-                Crowdedness   = IsSelectedLocationIndoor ? 0 : NewReviewCrowdedness,
-                Date          = DateTime.Now
+                LocationId = LocationList.SelectedItem.Id,
+                Author = NewReviewAuthor,
+                Comment = NewReviewComment,
+                Rating = NewReviewRating,
+                NoiseLevel = NewReviewNoiseLevel,
+                WifiStrength = NewReviewWifiStrength,
+                ComfortLevel = IsSelectedLocationIndoor ? NewReviewComfortLevel : 0,
+                PriceLevel = IsSelectedLocationIndoor ? NewReviewPriceLevel : 0,
+                Cleanliness = IsSelectedLocationIndoor ? 0 : NewReviewCleanliness,
+                Crowdedness = IsSelectedLocationIndoor ? 0 : NewReviewCrowdedness,
+                Date = DateTime.Now
             };
 
             var locationId = review.LocationId;
@@ -455,21 +467,21 @@ namespace NomadSpot.ViewModel
 
         public void ResetNewReviewForm()
         {
-            NewReviewAuthor       = "";
-            NewReviewRating       = 1;
-            NewReviewNoiseLevel   = 1;
+            NewReviewAuthor = "";
+            NewReviewRating = 1;
+            NewReviewNoiseLevel = 1;
             NewReviewWifiStrength = 0;
             NewReviewComfortLevel = 1;
-            NewReviewPriceLevel   = 1;
-            NewReviewCleanliness  = 1;
-            NewReviewCrowdedness  = 1;
-            NewReviewComment      = "";
+            NewReviewPriceLevel = 1;
+            NewReviewCleanliness = 1;
+            NewReviewCrowdedness = 1;
+            NewReviewComment = "";
         }
 
         private void RebuildLocationColumns(bool indoorOnly)
         {
             var excluded = indoorOnly ? LocationOutdoorOnlyColumns : LocationIndoorOnlyColumns;
-            var type     = indoorOnly ? typeof(IndoorLocation) : typeof(OutdoorLocation);
+            var type = indoorOnly ? typeof(IndoorLocation) : typeof(OutdoorLocation);
             LocationColumns = new ObservableCollection<ColumnOption>(
                 type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
                     .Select(p => p.Name)
@@ -591,7 +603,7 @@ namespace NomadSpot.ViewModel
             foreach (var f in filters)
             {
                 var colName = f.Key.Replace("_min", "").Replace("_max", "");
-                var prop    = typeof(Review).GetProperty(colName,
+                var prop = typeof(Review).GetProperty(colName,
                     BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
                 if (prop == null) continue;
 

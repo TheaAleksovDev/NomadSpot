@@ -1,4 +1,5 @@
 using NomadSpot.Model.Database;
+using NomadSpot.ViewModel;
 using System.IO;
 using System.Windows;
 
@@ -6,6 +7,8 @@ namespace NomadSpot.WPF
 {
     public partial class App : Application
     {
+        public static LocationViewModel ViewModel { get; private set; }
+
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
@@ -17,6 +20,20 @@ namespace NomadSpot.WPF
 
             new DatabaseInitializer(DatabaseType.SQLite,
                 Environment.GetEnvironmentVariable("SQLITE_CONNECTION_STRING")!).Initialize();
+
+            ViewModel = CreateViewModel(DatabaseType.PostgreSQL,
+                Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING")!);
+        }
+
+        public static LocationViewModel CreateViewModel(DatabaseType dbType, string connStr)
+        {
+            var factory = new RepositoryFactory(dbType, connStr);
+            var vm = new LocationViewModel(
+                factory.CreateLocationRepository(),
+                factory.CreateReviewRepository());
+            vm.WindowService = new WindowService(vm, new FilterControlFactory());
+            vm.GeolocationService = new WpfGeolocationService();
+            return vm;
         }
 
         private static void LoadEnvFile()
